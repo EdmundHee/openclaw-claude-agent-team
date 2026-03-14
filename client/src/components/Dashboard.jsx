@@ -174,7 +174,7 @@ function EmptySlot({ index }) {
 const styles = {
   wrapper: {
     minHeight: '100vh',
-    background: '#0f0f1a',
+    background: '#ffffff',
     padding: '24px',
     display: 'flex',
     flexDirection: 'column',

@@ -1,10 +1,10 @@
 import CharacterSprite from './CharacterSprite.jsx';
 
 const STATUS_COLORS = {
-  idle: { bg: '#1a1a2e', border: '#16213e', glow: 'transparent', dot: '#636e72' },
-  working: { bg: '#1a1a2e', border: '#00b894', glow: 'rgba(0, 184, 148, 0.3)', dot: '#00b894' },
-  waiting: { bg: '#1a1a2e', border: '#fdcb6e', glow: 'rgba(253, 203, 110, 0.3)', dot: '#fdcb6e' },
-  disconnected: { bg: '#1a1a2e', border: '#636e72', glow: 'transparent', dot: '#e17055' },
+  idle: { bg: '#ffffff', border: '#cccccc', glow: 'transparent', dot: '#636e72' },
+  working: { bg: '#ffffff', border: '#00b894', glow: 'rgba(0, 184, 148, 0.3)', dot: '#00b894' },
+  waiting: { bg: '#ffffff', border: '#fdcb6e', glow: 'rgba(253, 203, 110, 0.3)', dot: '#fdcb6e' },
+  disconnected: { bg: '#ffffff', border: '#cccccc', glow: 'transparent', dot: '#e17055' },
 };
 
 const STATUS_LABELS = {
@@ -163,8 +163,8 @@ export default function AgentCard({ agent, paletteIndex = 0, isOpenClaw = false,
 
 const styles = {
   card: {
-    background: '#1a1a2e',
-    border: '2px solid #16213e',
+    background: '#ffffff',
+    border: '2px solid #cccccc',
     borderRadius: '12px',
     padding: '16px 12px 12px',
     display: 'flex',
@@ -345,7 +345,7 @@ const styles = {
   },
   name: {
     fontFamily: '"Press Start 2P", monospace',
-    color: '#dfe6e9',
+    color: '#333333',
     letterSpacing: '1px',
     textTransform: 'uppercase',
   },
