@@ -2,19 +2,31 @@ import { useMemo } from 'react';
 import AgentCard from './AgentCard.jsx';
 
 /**
- * Dashboard Grid Layout
+ * Dashboard Grid Layout — 3 columns, auto-expanding rows
  *
- * ┌──────────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
- * │              │ Agent 1 │ Agent 2 │ Agent 3 │ Agent 4 │ Agent 5 │
- * │   OpenClaw   ├─────────┼─────────┼─────────┼─────────┼─────────┤
- * │   (2 rows)   │ Agent 6 │ Agent 7 │ Agent 8 │ Agent 9 │ Agent10 │
- * └──────────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+ * Default (≤6 agents):
+ * ┌──────────────┬─────────┬─────────┬─────────┐
+ * │              │ Agent 1 │ Agent 2 │ Agent 3 │
+ * │   OpenClaw   ├─────────┼─────────┼─────────┤
+ * │   (2 rows)   │ Agent 4 │ Agent 5 │ Agent 6 │
+ * └──────────────┴─────────┴─────────┴─────────┘
+ *
+ * When row 1+2 are full, expands:
+ * ┌──────────────┬─────────┬─────────┬─────────┐
+ * │              │ Agent 1 │ Agent 2 │ Agent 3 │
+ * │              ├─────────┼─────────┼─────────┤
+ * │   OpenClaw   │ Agent 4 │ Agent 5 │ Agent 6 │
+ * │   (3 rows)   ├─────────┼─────────┼─────────┤
+ * │              │ Agent 7 │ Agent 8 │ Agent 9 │
+ * └──────────────┴─────────┴─────────┴─────────┘
+ *
+ * Keeps growing as more agents are added.
  */
 
-const MAX_AGENT_SLOTS = 10;
+const COLS = 3;
+const MIN_ROWS = 2;
 
-export default function Dashboard({ agents }) {
-  // Separate main agents from sub-agents, sort by creation time
+export default function Dashboard({ agents, openclaw = {} }) {
   const sortedAgents = useMemo(() => {
     return [...agents]
       .filter(a => !a.isSubagent)
@@ -27,9 +39,16 @@ export default function Dashboard({ agents }) {
 
   const allAgents = [...sortedAgents, ...subAgents];
 
-  // Build 10 slots — fill with agents or empty
+  // Calculate how many rows we need (minimum 2)
+  const filledSlots = allAgents.length;
+  const rowsNeeded = Math.max(MIN_ROWS, Math.ceil(filledSlots / COLS));
+
+  // Total slots = rows × columns
+  const totalSlots = rowsNeeded * COLS;
+
+  // Build slots — fill with agents or empty
   const slots = [];
-  for (let i = 0; i < MAX_AGENT_SLOTS; i++) {
+  for (let i = 0; i < totalSlots; i++) {
     slots.push(allAgents[i] || null);
   }
 
@@ -38,8 +57,36 @@ export default function Dashboard({ agents }) {
   const waitingCount = agents.filter(a => a.status === 'waiting').length;
   const idleCount = agents.filter(a => a.status === 'idle').length;
 
-  // OpenClaw status is based on team activity
-  const openclawStatus = workingCount > 0 ? 'working' : 'idle';
+  // Unique projects across all agents
+  const projects = useMemo(() => {
+    const set = new Set();
+    agents.forEach(a => { if (a.project) set.add(a.project); });
+    return Array.from(set);
+  }, [agents]);
+
+  // OpenClaw status: use gateway status if connected, else derive from team
+  const openclawConnected = openclaw?.connected ?? false;
+  const openclawStatus = openclawConnected
+    ? (openclaw.status || 'idle')
+    : (workingCount > 0 ? 'working' : 'idle');
+  const openclawMessage = openclawConnected
+    ? (openclaw.message || (workingCount > 0 ? `${projects.length} project${projects.length !== 1 ? 's' : ''} active` : null))
+    : (workingCount > 0 ? `${projects.length} project${projects.length !== 1 ? 's' : ''} active` : null);
+
+  // Dynamic grid styles
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: `2fr repeat(${COLS}, 1fr)`,
+    gridTemplateRows: `repeat(${rowsNeeded}, 1fr)`,
+    gap: '12px',
+    flex: 1,
+    minHeight: 0,
+  };
+
+  const openclawCellStyle = {
+    gridRow: `1 / ${rowsNeeded + 1}`, // Span ALL rows
+    gridColumn: '1 / 2',
+  };
 
   return (
     <div style={styles.wrapper}>
@@ -66,33 +113,28 @@ export default function Dashboard({ agents }) {
       </div>
 
       {/* Grid */}
-      <div style={styles.grid}>
-        {/* OpenClaw - spans 2 rows */}
-        <div style={styles.openclawCell}>
+      <div style={gridStyle}>
+        {/* OpenClaw - spans all rows */}
+        <div style={openclawCellStyle}>
           <AgentCard
-            agent={{ name: 'OpenClaw', status: openclawStatus, tool: workingCount > 0 ? `Managing ${workingCount} agent${workingCount > 1 ? 's' : ''}` : null }}
+            agent={{
+              name: 'OpenClaw',
+              status: openclawStatus,
+              tool: openclawMessage,
+              toolStatus: openclawMessage,
+              openclawConnected,
+            }}
             isOpenClaw={true}
           />
         </div>
 
-        {/* Agent slots - Row 1 */}
-        {slots.slice(0, 5).map((agent, i) => (
+        {/* Agent slots */}
+        {slots.map((agent, i) => (
           <div key={`slot-${i}`} style={styles.agentCell}>
             {agent ? (
               <AgentCard agent={agent} paletteIndex={i} />
             ) : (
               <EmptySlot index={i + 1} />
-            )}
-          </div>
-        ))}
-
-        {/* Agent slots - Row 2 */}
-        {slots.slice(5, 10).map((agent, i) => (
-          <div key={`slot-${i + 5}`} style={styles.agentCell}>
-            {agent ? (
-              <AgentCard agent={agent} paletteIndex={i + 5} />
-            ) : (
-              <EmptySlot index={i + 6} />
             )}
           </div>
         ))}
@@ -156,18 +198,6 @@ const styles = {
     height: '8px',
     borderRadius: '50%',
     display: 'inline-block',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '2fr repeat(5, 1fr)',
-    gridTemplateRows: '1fr 1fr',
-    gap: '12px',
-    flex: 1,
-    minHeight: 0,
-  },
-  openclawCell: {
-    gridRow: '1 / 3', // Span 2 rows
-    gridColumn: '1 / 2',
   },
   agentCell: {
     minHeight: '180px',

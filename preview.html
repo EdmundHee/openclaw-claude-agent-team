@@ -26,15 +26,14 @@
   .stat-item { font-size: 13px; color: #b2bec3; display: flex; align-items: center; gap: 6px; }
   .stat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
-  .grid {
+  .main-grid {
     display: grid;
-    grid-template-columns: 2fr repeat(5, 1fr);
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 2fr repeat(3, 1fr);
     gap: 12px;
     flex: 1;
   }
 
-  .openclaw-cell { grid-row: 1 / 3; grid-column: 1 / 2; }
+  .openclaw-cell { grid-column: 1 / 2; }
   .agent-cell { min-height: 180px; }
 
   .card {
@@ -101,6 +100,19 @@
   }
   .empty-label { font-family: 'Press Start 2P', monospace; font-size: 7px; color: #2d3436; letter-spacing: 1px; }
 
+  .project-badge {
+    background: rgba(108,92,231,0.15);
+    border: 1px solid rgba(108,92,231,0.3);
+    border-radius: 6px;
+    padding: 3px 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .project-text { font-size: 9px; color: #a29bfe; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+
   .status-bar {
     position: fixed;
     bottom: 12px;
@@ -122,49 +134,11 @@
 <div class="wrapper">
   <div class="header">
     <h1 class="title">OPENCLAW DASHBOARD</h1>
-    <div class="stats">
-      <span class="stat-item"><span class="stat-dot" style="background:#00b894"></span>2 working</span>
-      <span class="stat-item"><span class="stat-dot" style="background:#fdcb6e"></span>1 waiting</span>
-      <span class="stat-item"><span class="stat-dot" style="background:#636e72"></span>2 idle</span>
-      <span class="stat-item">5 total</span>
-    </div>
+    <div class="stats" id="stats-bar"></div>
   </div>
 
-  <div class="grid">
-    <!-- OpenClaw -->
-    <div class="openclaw-cell">
-      <div class="card working" id="openclaw-card">
-        <div class="status-row">
-          <div class="status-dot working"></div>
-          <span class="status-label working">WORKING</span>
-        </div>
-        <div class="sprite-container">
-          <canvas id="openclaw-sprite" width="128" height="128" style="width:128px;height:128px;image-rendering:pixelated;"></canvas>
-        </div>
-        <div class="tool-badge">
-          <span class="tool-icon">&#9881;</span>
-          <span class="tool-text">Managing 2 agents</span>
-        </div>
-        <div class="name-container">
-          <span class="name lg">OPENCLAW</span>
-          <span class="role">Product Manager</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Row 1 agents -->
-    <div class="agent-cell" id="agent-cell-0"></div>
-    <div class="agent-cell" id="agent-cell-1"></div>
-    <div class="agent-cell" id="agent-cell-2"></div>
-    <div class="agent-cell" id="agent-cell-3"></div>
-    <div class="agent-cell" id="agent-cell-4"></div>
-    <!-- Row 2 agents -->
-    <div class="agent-cell" id="agent-cell-5"></div>
-    <div class="agent-cell" id="agent-cell-6"></div>
-    <div class="agent-cell" id="agent-cell-7"></div>
-    <div class="agent-cell" id="agent-cell-8"></div>
-    <div class="agent-cell" id="agent-cell-9"></div>
-  </div>
+  <!-- Dynamic grid: OpenClaw auto-expands with agent count -->
+  <div class="main-grid" id="main-grid"></div>
 </div>
 
 <div class="status-bar">
@@ -175,14 +149,19 @@
 </div>
 
 <script>
+// --- Config ---
+const COLS = 3;
+const MIN_ROWS = 2;
+
 // --- Demo agent data ---
 const demoAgents = [
-  { name: 'researcher', status: 'working', tool: 'WebSearch', toolStatus: 'Searching: React patterns' },
-  { name: 'coder', status: 'working', tool: 'Edit', toolStatus: 'Editing App.jsx' },
-  { name: 'reviewer', status: 'idle', tool: null },
-  { name: 'tester', status: 'waiting', tool: null },
-  { name: 'deployer', status: 'idle', tool: null },
-  null, null, null, null, null
+  { name: 'researcher', status: 'working', tool: 'WebSearch', toolStatus: 'Searching: React patterns', project: 'openclaw-dashboard' },
+  { name: 'coder', status: 'working', tool: 'Edit', toolStatus: 'Editing App.jsx', project: 'openclaw-dashboard' },
+  { name: 'reviewer', status: 'idle', tool: null, project: 'my-api' },
+  { name: 'tester', status: 'waiting', tool: null, project: 'my-api' },
+  { name: 'deployer', status: 'idle', tool: null, project: 'landing-page' },
+  { name: 'debugger', status: 'working', tool: 'Bash', toolStatus: 'Running tests', project: 'openclaw-dashboard' },
+  { name: 'architect', status: 'idle', tool: null, project: 'my-api' },
 ];
 
 // --- Palettes ---
@@ -217,23 +196,18 @@ function drawChar(ctx, palette, frame, state, isOpenClaw, size) {
   const bobY = state === 'idle' ? Math.sin(frame * 0.8) * 1.5 : (frame % 2 === 0 ? -1 : 1);
   const baseY = 6 + bobY;
 
-  // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.15)';
   ctx.beginPath(); ctx.ellipse(16,28,8,3,0,0,Math.PI*2); ctx.fill();
 
-  // Body
   ctx.fillStyle = palette.body;
   roundRect(ctx,8,baseY+8,16,14,4); ctx.fill();
 
-  // Head
   ctx.fillStyle = palette.body;
   roundRect(ctx,9,baseY-1,14,12,5); ctx.fill();
 
-  // Face highlight
   ctx.fillStyle = palette.accent;
   roundRect(ctx,11,baseY+1,10,6,3); ctx.fill();
 
-  // Eyes
   ctx.fillStyle = palette.eye;
   const blink = frame % 20 === 0;
   if (blink) {
@@ -243,7 +217,6 @@ function drawChar(ctx, palette, frame, state, isOpenClaw, size) {
     ctx.fillStyle = '#FFF'; ctx.fillRect(13,baseY+3,1,1); ctx.fillRect(18,baseY+3,1,1);
   }
 
-  // Mouth
   ctx.fillStyle = palette.eye;
   if (state === 'working' && frame % 2 === 0) {
     ctx.fillRect(14,baseY+7,4,2);
@@ -252,7 +225,6 @@ function drawChar(ctx, palette, frame, state, isOpenClaw, size) {
     ctx.fillRect(14,baseY+7,4,1);
   }
 
-  // Arms
   ctx.fillStyle = palette.body;
   if (state === 'working') {
     const armUp = frame % 2 === 0;
@@ -262,11 +234,9 @@ function drawChar(ctx, palette, frame, state, isOpenClaw, size) {
     ctx.fillRect(5,baseY+10,3,6); ctx.fillRect(24,baseY+10,3,6);
   }
 
-  // Legs
   ctx.fillStyle = palette.accent;
   ctx.fillRect(11,baseY+20,4,4); ctx.fillRect(17,baseY+20,4,4);
 
-  // Crown for OpenClaw
   if (isOpenClaw) {
     ctx.fillStyle = palette.crown;
     ctx.fillRect(10,baseY-4,12,3);
@@ -277,69 +247,51 @@ function drawChar(ctx, palette, frame, state, isOpenClaw, size) {
   ctx.restore();
 }
 
-// --- Create agent cards ---
-demoAgents.forEach((agent, i) => {
-  const cell = document.getElementById(`agent-cell-${i}`);
-  if (!agent) {
-    cell.innerHTML = `<div class="empty-slot">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="8" y="8" width="16" height="16" rx="4" stroke="#2d3436" stroke-width="2" stroke-dasharray="4 3"/>
-        <line x1="16" y1="12" x2="16" y2="20" stroke="#2d3436" stroke-width="2"/>
-        <line x1="12" y1="16" x2="20" y2="16" stroke="#2d3436" stroke-width="2"/>
-      </svg>
-      <span class="empty-label">SLOT ${i+1}</span>
-    </div>`;
-    return;
-  }
+// --- Build the grid dynamically ---
+function buildGrid() {
+  const grid = document.getElementById('main-grid');
+  const agentCount = demoAgents.length;
+  const uniqueProjects = [...new Set(demoAgents.map(a => a.project).filter(Boolean))];
+  const rowsNeeded = Math.max(MIN_ROWS, Math.ceil(agentCount / COLS));
+  const totalSlots = rowsNeeded * COLS;
 
-  const statusClass = agent.status;
-  cell.innerHTML = `
-    <div class="card ${statusClass}">
+  // Set grid rows dynamically
+  grid.style.gridTemplateRows = `repeat(${rowsNeeded}, 1fr)`;
+
+  grid.innerHTML = '';
+
+  // OpenClaw card — spans all rows
+  const ocCell = document.createElement('div');
+  ocCell.className = 'openclaw-cell';
+  ocCell.style.gridRow = `1 / ${rowsNeeded + 1}`;
+  ocCell.innerHTML = `
+    <div class="card working" id="openclaw-card" style="height:100%">
       <div class="status-row">
-        <div class="status-dot ${statusClass}"></div>
-        <span class="status-label ${statusClass}">${agent.status.toUpperCase()}</span>
+        <div class="status-dot working"></div>
+        <span class="status-label working">WORKING</span>
       </div>
       <div class="sprite-container">
-        <canvas id="sprite-${i}" width="80" height="80" style="width:80px;height:80px;image-rendering:pixelated;"></canvas>
+        <canvas id="openclaw-sprite" width="128" height="128" style="width:128px;height:128px;image-rendering:pixelated;"></canvas>
       </div>
-      ${agent.tool ? `<div class="tool-badge"><span class="tool-icon">&#9881;</span><span class="tool-text">${agent.toolStatus||agent.tool}</span></div>` : ''}
+      <div class="tool-badge">
+        <span class="tool-icon">&#9881;</span>
+        <span class="tool-text">${uniqueProjects.length} project${uniqueProjects.length !== 1 ? 's' : ''} active</span>
+      </div>
       <div class="name-container">
-        <span class="name sm">${agent.name.toUpperCase()}</span>
+        <span class="name lg">OPENCLAW</span>
+        <span class="role">Product Manager</span>
       </div>
     </div>`;
-});
+  grid.appendChild(ocCell);
 
-// --- Animation loop ---
-let frame = 0;
-function animate() {
-  frame++;
+  // Agent slots
+  for (let i = 0; i < totalSlots; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'agent-cell';
+    cell.id = `agent-cell-${i}`;
 
-  // OpenClaw
-  const ocCanvas = document.getElementById('openclaw-sprite');
-  if (ocCanvas) drawChar(ocCanvas.getContext('2d'), OPENCLAW_PALETTE, frame, 'working', true, 128);
-
-  // Agents
-  demoAgents.forEach((agent, i) => {
-    if (!agent) return;
-    const canvas = document.getElementById(`sprite-${i}`);
-    if (canvas) drawChar(canvas.getContext('2d'), PALETTES[i], frame, agent.status === 'working' ? 'working' : 'idle', false, 80);
-  });
-
-  setTimeout(animate, 250);
-}
-animate();
-
-// --- Simulate activity changes ---
-setInterval(() => {
-  demoAgents.forEach((agent, i) => {
-    if (!agent) return;
-    const rand = Math.random();
-    if (rand < 0.08) {
-      agent.status = agent.status === 'working' ? 'idle' : 'working';
-      agent.tool = agent.status === 'working' ? 'Bash' : null;
-      agent.toolStatus = agent.status === 'working' ? 'Running tests' : null;
-      // Re-render card
-      const cell = document.getElementById(`agent-cell-${i}`);
+    const agent = demoAgents[i] || null;
+    if (agent) {
       cell.innerHTML = `
         <div class="card ${agent.status}">
           <div class="status-row">
@@ -350,12 +302,82 @@ setInterval(() => {
             <canvas id="sprite-${i}" width="80" height="80" style="width:80px;height:80px;image-rendering:pixelated;"></canvas>
           </div>
           ${agent.tool ? `<div class="tool-badge"><span class="tool-icon">&#9881;</span><span class="tool-text">${agent.toolStatus||agent.tool}</span></div>` : ''}
+          ${agent.project ? `<div class="project-badge"><span style="font-size:9px">&#128193;</span><span class="project-text">${agent.project}</span></div>` : ''}
           <div class="name-container">
             <span class="name sm">${agent.name.toUpperCase()}</span>
           </div>
         </div>`;
+    } else {
+      cell.innerHTML = `<div class="empty-slot">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect x="8" y="8" width="16" height="16" rx="4" stroke="#2d3436" stroke-width="2" stroke-dasharray="4 3"/>
+          <line x1="16" y1="12" x2="16" y2="20" stroke="#2d3436" stroke-width="2"/>
+          <line x1="12" y1="16" x2="20" y2="16" stroke="#2d3436" stroke-width="2"/>
+        </svg>
+        <span class="empty-label">SLOT ${i+1}</span>
+      </div>`;
+    }
+    grid.appendChild(cell);
+  }
+}
+
+function updateStats() {
+  const working = demoAgents.filter(a => a.status === 'working').length;
+  const waiting = demoAgents.filter(a => a.status === 'waiting').length;
+  const idle = demoAgents.filter(a => a.status === 'idle').length;
+  document.getElementById('stats-bar').innerHTML = `
+    <span class="stat-item"><span class="stat-dot" style="background:#00b894"></span>${working} working</span>
+    <span class="stat-item"><span class="stat-dot" style="background:#fdcb6e"></span>${waiting} waiting</span>
+    <span class="stat-item"><span class="stat-dot" style="background:#636e72"></span>${idle} idle</span>
+    <span class="stat-item">${demoAgents.length} total</span>`;
+}
+
+buildGrid();
+updateStats();
+
+// --- Animation loop ---
+let frame = 0;
+function animate() {
+  frame++;
+
+  const ocCanvas = document.getElementById('openclaw-sprite');
+  if (ocCanvas) drawChar(ocCanvas.getContext('2d'), OPENCLAW_PALETTE, frame, 'working', true, 128);
+
+  demoAgents.forEach((agent, i) => {
+    if (!agent) return;
+    const canvas = document.getElementById(`sprite-${i}`);
+    if (canvas) drawChar(canvas.getContext('2d'), PALETTES[i % PALETTES.length], frame, agent.status === 'working' ? 'working' : 'idle', false, 80);
+  });
+
+  setTimeout(animate, 250);
+}
+animate();
+
+// --- Simulate: randomly add/remove agents + toggle status ---
+setInterval(() => {
+  // Randomly toggle agent status
+  demoAgents.forEach((agent) => {
+    if (!agent) return;
+    if (Math.random() < 0.08) {
+      agent.status = agent.status === 'working' ? 'idle' : 'working';
+      agent.tool = agent.status === 'working' ? 'Bash' : null;
+      agent.toolStatus = agent.status === 'working' ? 'Running tests' : null;
     }
   });
+
+  // Occasionally add a new agent (up to 12) to show auto-expansion
+  if (Math.random() < 0.05 && demoAgents.length < 12) {
+    const names = ['planner', 'optimizer', 'scanner', 'builder', 'monitor'];
+    demoAgents.push({
+      name: names[demoAgents.length % names.length],
+      status: 'working',
+      tool: 'Task',
+      toolStatus: 'Starting up...'
+    });
+  }
+
+  buildGrid();
+  updateStats();
 }, 4000);
 </script>
 </body>

@@ -4,6 +4,7 @@ const STATUS_COLORS = {
   idle: { bg: '#1a1a2e', border: '#16213e', glow: 'transparent', dot: '#636e72' },
   working: { bg: '#1a1a2e', border: '#00b894', glow: 'rgba(0, 184, 148, 0.3)', dot: '#00b894' },
   waiting: { bg: '#1a1a2e', border: '#fdcb6e', glow: 'rgba(253, 203, 110, 0.3)', dot: '#fdcb6e' },
+  disconnected: { bg: '#1a1a2e', border: '#636e72', glow: 'transparent', dot: '#e17055' },
 };
 
 const STATUS_LABELS = {
@@ -60,6 +61,14 @@ export default function AgentCard({ agent, paletteIndex = 0, isOpenClaw = false 
         </div>
       )}
 
+      {/* Project badge (for non-OpenClaw agents) */}
+      {!isOpenClaw && agent?.project && (
+        <div style={styles.projectBadge}>
+          <span style={styles.projectIcon}>&#128193;</span>
+          <span style={styles.projectText}>{agent.project}</span>
+        </div>
+      )}
+
       {/* Agent name */}
       <div style={styles.nameContainer}>
         <span style={{
@@ -70,6 +79,9 @@ export default function AgentCard({ agent, paletteIndex = 0, isOpenClaw = false 
         </span>
         {isOpenClaw && (
           <span style={styles.role}>Product Manager</span>
+        )}
+        {isOpenClaw && agent?.openclawConnected === false && (
+          <span style={styles.disconnectedBadge}>GATEWAY OFFLINE</span>
         )}
         {agent?.isSubagent && (
           <span style={styles.subagentBadge}>SUB-AGENT</span>
@@ -169,5 +181,38 @@ const styles = {
     padding: '2px 6px',
     borderRadius: '4px',
     letterSpacing: '1px',
+  },
+  disconnectedBadge: {
+    fontFamily: '"Press Start 2P", monospace',
+    fontSize: '6px',
+    color: '#e17055',
+    background: 'rgba(225, 112, 85, 0.15)',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    letterSpacing: '1px',
+  },
+  projectBadge: {
+    background: 'rgba(108, 92, 231, 0.15)',
+    border: '1px solid rgba(108, 92, 231, 0.3)',
+    borderRadius: '6px',
+    padding: '3px 8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    maxWidth: '100%',
+    overflow: 'hidden',
+  },
+  projectIcon: {
+    fontSize: '9px',
+    flexShrink: 0,
+  },
+  projectText: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '9px',
+    color: '#a29bfe',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontWeight: '600',
   },
 };

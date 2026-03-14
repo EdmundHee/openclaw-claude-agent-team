@@ -2,8 +2,16 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Scans ~/.claude/projects/ for active JSONL session files.
- * A session is considered "active" if it was modified within the last 10 minutes.
+ * Global Session Scanner
+ *
+ * Scans ALL projects in ~/.claude/projects/ and returns sessions
+ * with their decoded project name and full path, so the dashboard
+ * can show which agent is working on which project.
+ *
+ * Claude Code encodes project paths as directory names:
+ *   /Users/edmund/my-project → Users-edmund-my-project
+ *
+ * We decode this back to a human-readable project name and full path.
  */
 
 const ACTIVE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
@@ -28,6 +36,9 @@ export class SessionScanner {
         const stat = fs.statSync(projectPath);
         if (!stat.isDirectory()) continue;
 
+        // Decode the full project path and short name
+        const decoded = this._decodeProjectDir(projectDir);
+
         try {
           const files = fs.readdirSync(projectPath);
           for (const file of files) {
@@ -39,13 +50,11 @@ export class SessionScanner {
               const age = Date.now() - fileStat.mtimeMs;
               const active = age < ACTIVE_THRESHOLD_MS;
 
-              // Decode project name from hash
-              const projectName = this._decodeProjectDir(projectDir);
-
               sessions.push({
                 file: filePath,
                 sessionId: path.basename(file, '.jsonl'),
-                project: projectName,
+                project: decoded.name,
+                projectPath: decoded.fullPath,
                 projectDir: projectDir,
                 modifiedAt: fileStat.mtimeMs,
                 size: fileStat.size,
@@ -68,14 +77,53 @@ export class SessionScanner {
     return sessions;
   }
 
+  /**
+   * Decode Claude Code's project directory hash back to a path.
+   *
+   * Claude Code replaces /, \, : with - in the path.
+   * e.g. "Users-edmund-code-my-project" → /Users/edmund/code/my-project
+   *
+   * We reconstruct the most likely original path and extract the
+   * last meaningful directory name as the short project name.
+   */
   _decodeProjectDir(dirName) {
-    // Claude Code encodes project paths: /home/user/project -> home-user-project
-    // Try to make it human readable
+    // Reconstruct path by replacing - with /
+    const reconstructed = '/' + dirName.replace(/-/g, '/');
+
+    // Try to find a real directory that matches
+    // Check progressively longer paths
+    let bestPath = reconstructed;
     const parts = dirName.split('-');
-    // Take last meaningful segment as project name
-    if (parts.length > 0) {
-      return parts[parts.length - 1] || dirName;
+
+    // Walk from root trying to find actual directories
+    let current = '';
+    let lastValidPath = '';
+    for (const part of parts) {
+      const trySlash = current + '/' + part;
+      const tryDash = current + '-' + part;
+
+      if (current === '') {
+        current = '/' + part;
+        if (fs.existsSync(current)) lastValidPath = current;
+      } else if (fs.existsSync(trySlash)) {
+        current = trySlash;
+        lastValidPath = current;
+      } else if (fs.existsSync(tryDash)) {
+        current = tryDash;
+        lastValidPath = current;
+      } else {
+        current = trySlash;
+      }
     }
-    return dirName;
+
+    bestPath = lastValidPath || reconstructed;
+
+    // Extract short name: last directory component
+    const shortName = path.basename(bestPath);
+
+    return {
+      name: shortName || dirName,
+      fullPath: bestPath
+    };
   }
 }

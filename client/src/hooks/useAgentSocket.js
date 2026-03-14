@@ -4,6 +4,11 @@ const WS_URL = `ws://${window.location.hostname}:3000`;
 
 export function useAgentSocket() {
   const [agents, setAgents] = useState([]);
+  const [openclaw, setOpenclaw] = useState({
+    connected: false,
+    status: 'disconnected',
+    message: null,
+  });
   const [connected, setConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectTimer = useRef(null);
@@ -25,6 +30,7 @@ export function useAgentSocket() {
       switch (msg.type) {
         case 'snapshot':
           setAgents(msg.agents || []);
+          if (msg.openclaw) setOpenclaw(msg.openclaw);
           break;
 
         case 'agent:added':
@@ -43,12 +49,15 @@ export function useAgentSocket() {
         case 'agent:removed':
           setAgents(prev => prev.filter(a => a.id !== msg.id));
           break;
+
+        case 'openclaw:status':
+          setOpenclaw(msg.openclaw);
+          break;
       }
     };
 
     ws.onclose = () => {
       setConnected(false);
-      // Reconnect after 3 seconds
       reconnectTimer.current = setTimeout(connect, 3000);
     };
 
@@ -65,5 +74,5 @@ export function useAgentSocket() {
     };
   }, [connect]);
 
-  return { agents, connected };
+  return { agents, openclaw, connected };
 }

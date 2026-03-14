@@ -2,41 +2,41 @@ import { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard.jsx';
 import { useAgentSocket } from './hooks/useAgentSocket.js';
 
-// Global animation keyframes
 const globalStyles = `
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
   }
-
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #0f0f1a; overflow-x: hidden; }
 `;
 
+const DEMO_PROJECTS = ['openclaw-dashboard', 'my-api', 'landing-page'];
+
 export default function App() {
-  const { agents, connected } = useAgentSocket();
+  const { agents, openclaw, connected } = useAgentSocket();
   const [demoMode, setDemoMode] = useState(false);
   const [demoAgents, setDemoAgents] = useState([]);
+  const [demoOpenclaw, setDemoOpenclaw] = useState({ connected: true, status: 'idle', message: null });
 
-  // Toggle demo mode if no real agents
   useEffect(() => {
     if (demoMode) {
-      // Simulate agents for preview/development
       const demo = [
-        { id: 'demo-1', name: 'researcher', status: 'working', tool: 'WebSearch', toolStatus: 'Searching: React patterns', createdAt: 1 },
-        { id: 'demo-2', name: 'coder', status: 'working', tool: 'Edit', toolStatus: 'Editing App.jsx', createdAt: 2 },
-        { id: 'demo-3', name: 'reviewer', status: 'idle', tool: null, createdAt: 3 },
-        { id: 'demo-4', name: 'tester', status: 'waiting', tool: null, createdAt: 4 },
-        { id: 'demo-5', name: 'deployer', status: 'idle', tool: null, createdAt: 5 },
+        { id: 'demo-1', name: 'researcher', status: 'working', tool: 'WebSearch', toolStatus: 'Searching: React patterns', project: 'openclaw-dashboard', createdAt: 1 },
+        { id: 'demo-2', name: 'coder', status: 'working', tool: 'Edit', toolStatus: 'Editing App.jsx', project: 'openclaw-dashboard', createdAt: 2 },
+        { id: 'demo-3', name: 'reviewer', status: 'idle', tool: null, project: 'my-api', createdAt: 3 },
+        { id: 'demo-4', name: 'tester', status: 'waiting', tool: null, project: 'my-api', createdAt: 4 },
+        { id: 'demo-5', name: 'deployer', status: 'idle', tool: null, project: 'landing-page', createdAt: 5 },
+        { id: 'demo-6', name: 'debugger', status: 'working', tool: 'Bash', toolStatus: 'Running tests', project: 'openclaw-dashboard', createdAt: 6 },
+        { id: 'demo-7', name: 'architect', status: 'idle', tool: null, project: 'my-api', createdAt: 7 },
       ];
       setDemoAgents(demo);
+      setDemoOpenclaw({ connected: true, status: 'working', message: 'Orchestrating 3 projects' });
 
-      // Simulate activity
       const interval = setInterval(() => {
         setDemoAgents(prev => prev.map(a => {
           const rand = Math.random();
@@ -54,13 +54,13 @@ export default function App() {
   }, [demoMode]);
 
   const displayAgents = demoMode ? demoAgents : agents;
+  const displayOpenclaw = demoMode ? demoOpenclaw : openclaw;
 
   return (
     <>
       <style>{globalStyles}</style>
-      <Dashboard agents={displayAgents} />
+      <Dashboard agents={displayAgents} openclaw={displayOpenclaw} />
 
-      {/* Connection status + demo toggle */}
       <div style={styles.statusBar}>
         <div style={styles.connectionStatus}>
           <div style={{
@@ -68,7 +68,17 @@ export default function App() {
             backgroundColor: connected ? '#00b894' : '#e17055',
           }} />
           <span style={styles.connectionText}>
-            {connected ? 'Connected' : 'Reconnecting...'}
+            {connected ? 'Dashboard connected' : 'Reconnecting...'}
+          </span>
+        </div>
+
+        <div style={styles.connectionStatus}>
+          <div style={{
+            ...styles.connectionDot,
+            backgroundColor: displayOpenclaw.connected ? '#FF6B35' : '#636e72',
+          }} />
+          <span style={styles.connectionText}>
+            {displayOpenclaw.connected ? 'OpenClaw gateway' : 'OpenClaw offline'}
           </span>
         </div>
 
