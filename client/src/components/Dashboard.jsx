@@ -26,6 +26,14 @@ import AgentCard from './AgentCard.jsx';
 const COLS = 3;
 const MIN_ROWS = 2;
 
+// Sprite sheets for agents - matches sprite config order
+const AGENT_SPRITES = [
+  '/sprites/agent-designer.svg',
+  '/sprites/agent-frontend.svg',
+  '/sprites/agent-backend.svg',
+  '/sprites/agent-qa.svg',
+];
+
 export default function Dashboard({ agents, openclaw = {} }) {
   const sortedAgents = useMemo(() => {
     return [...agents]
@@ -125,6 +133,7 @@ export default function Dashboard({ agents, openclaw = {} }) {
               openclawConnected,
             }}
             isOpenClaw={true}
+            spriteSheet="/sprites/openclaw-v2.svg"
           />
         </div>
 
@@ -132,7 +141,11 @@ export default function Dashboard({ agents, openclaw = {} }) {
         {slots.map((agent, i) => (
           <div key={`slot-${i}`} style={styles.agentCell}>
             {agent ? (
-              <AgentCard agent={agent} paletteIndex={i} />
+              <AgentCard 
+                agent={agent} 
+                paletteIndex={i} 
+                spriteSheet={AGENT_SPRITES[i] || null}
+              />
             ) : (
               <EmptySlot index={i + 1} />
             )}

@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" width="64" height="128" image-rendering="pixelated">
+  <defs>
+    <style>
+      .skin { fill: #F5DEB3; }
+      .skin-dark { fill: #D2B48C; }
+      .hair { fill: #4A3728; }
+      .hair-dark { fill: #2E2319; }
+      .shirt { fill: #2C3E50; }
+      .shirt-dark { fill: #1A252F; }
+      .shirt-light { fill: #34495E; }
+      .tie { fill: #E74C3C; }
+      .eye { fill: #2D3436; }
+      .eye-shine { fill: #FFFFFF; }
+      .mouth { fill: #C0392B; }
+      .glasses { fill: #17202A; }
+    </style>
+  </defs>
+  
+  <!-- IDLE -->
+  
+    <ellipse cx="32" cy="60" rx="12" ry="4" fill="#000000" opacity="0.2"/>
+    
+    <!-- Legs -->
+    <rect x="22" y="50" width="6" height="10" fill="#1A252F" rx="2"/>
+    <rect x="36" y="50" width="6" height="10" fill="#1A252F" rx="2"/>
+    <rect x="23" y="51" width="4" height="8" fill="#2C3E50" rx="1"/>
+    <rect x="37" y="51" width="4" height="8" fill="#2C3E50" rx="1"/>
+    
+    <!-- Shoes -->
+    <rect x="20" y="56" width="10" height="4" fill="#17202A" rx="2"/>
+    <rect x="34" y="56" width="10" height="4" fill="#17202A" rx="2"/>
+    
+    <!-- Body/Suit -->
+    <rect x="20" y="30" width="24" height="22" class="shirt" rx="4"/>
+    <path class="shirt-dark" d="M32 30 L32 52"/>
+    <rect x="28" y="30" width="8" height="22" class="tie" rx="1"/>
+    
+    <!-- Suit collar -->
+    <path class="shirt-light" d="M24 30 L28 36 L32 30 L36 36 L40 30"/>
+    
+    <!-- Neck -->
+    <rect x="28" y="24" width="8" height="7" class="skin"/>
+    
+    <!-- Arms -->
+    <rect x="12" y="32" width="6" height="16" class="shirt" rx="3"/>
+    <rect x="46" y="32" width="6" height="16" class="shirt" rx="3"/>
+    
+    <!-- Hands -->
+    <circle cx="15" cy="50" r="4" class="skin"/>
+    <circle cx="49" cy="50" r="4" class="skin"/>
+    
+    <!-- Head -->
+    <rect x="18" y="8" width="28" height="20" class="skin" rx="6"/>
+    
+    <!-- Hair (short, professional) -->
+    <rect x="18" y="6" width="28" height="8" class="hair" rx="4"/>
+    <path class="hair-dark" d="M20 8 L18 14 L22 10 Z"/>
+    <path class="hair-dark" d="M44 8 L46 14 L42 10 Z"/>
+    
+    <!-- Sideburns -->
+    <rect x="16" y="12" width="3" height="8" class="hair" rx="1"/>
+    <rect x="45" y="12" width="3" height="8" class="hair" rx="1"/>
+    
+    <!-- Beard -->
+    <path class="hair" d="M22 22 L20 28 L22 26 L24 28 L26 26 L28 28 L30 26 L32 28 L34 26 L36 28 L38 26 L40 28 L42 26 L44 22 Z"/>
+    <path class="hair-dark" d="M24 24 L23 27 L26 25"/>
+    <path class="hair-dark" d="M40 24 L41 27 L38 25"/>
+    
+    <!-- Glasses -->
+    <rect x="22" y="14" width="8" height="6" class="glasses" rx="2"/>
+    <rect x="34" y="14" width="8" height="6" class="glasses" rx="2"/>
+    <rect x="30" y="16" width="4" height="2" class="glasses"/>
+    <rect x="22" y="15" width="8" height="2" fill="#3498DB" opacity="0.3"/>
+    <rect x="34" y="15" width="8" height="2" fill="#3498DB" opacity="0.3"/>
+    
+    <!-- Eyes behind glasses -->
+    <rect x="24" y="16" width="4" height="4" class="eye" rx="1"/>
+    <rect x="36" y="16" width="4" height="4" class="eye" rx="1"/>
+    <rect x="25" y="17" width="1" height="1" class="eye-shine"/>
+    <rect x="37" y="17" width="1" height="1" class="eye-shine"/>
+    
+    <!-- Eyebrows -->
+    <rect x="22" y="11" width="7" height="2" class="hair-dark" rx="1"/>
+    <rect x="35" y="11" width="7" height="2" class="hair-dark" rx="1"/>
+    
+    <!-- Nose (glasses nose bridge) -->
+    <rect x="30" y="18" width="4" height="2" class="skin-dark" rx="1"/>
+    
+    <!-- Mouth hidden by beard -->
+    <rect x="29" y="24" width="6" height="2" class="mouth" rx="1"/>
+  
+  
+  <!-- WORKING -->
+  <g id="working" transform="translate(0, 64)">
+    <ellipse cx="32" cy="60" rx="12" ry="4" fill="#000000" opacity="0.2"/>
+    
+    <!-- Legs -->
+    <rect x="22" y="49" width="6" height="10" fill="#1A252F" rx="2"/>
+    <rect x="36" y="49" width="6" height="10" fill="#1A252F" rx="2"/>
+    <rect x="23" y="50" width="4" height="8" fill="#2C3E50" rx="1"/>
+    <rect x="37" y="50" width="4" height="8" fill="#2C3E50" rx="1"/>
+    
+    <rect x="20" y="55" width="10" height="4" fill="#17202A" rx="2"/>
+    <rect x="34" y="55" width="10" height="4" fill="#17202A" rx="2"/>
+    
+    <!-- Body -->
+    <rect x="20" y="29" width="24" height="22" class="shirt" rx="4"/>
+    <path class="shirt-dark" d="M32 29 L32 51"/>
+    <rect x="28" y="29" width="8" height="22" class="tie" rx="1"/>
+    <path class="shirt-light" d="M24 29 L28 35 L32 29 L36 35 L40 29"/>
+    
+    <!-- Arms typing -->
+    <rect x="10" y="30" width="6" height="16" class="shirt" rx="3"/>
+    <rect x="48" y="30" width="6" height="16" class="shirt" rx="3"/>
+    <rect x="8" y="44" width="6" height="6" class="skin" rx="2"/>
+    <rect x="50" y="44" width="6" height="6" class="skin" rx="2"/>
+    
+    <!-- Neck -->
+    <rect x="28" y="23" width="8" height="7" class="skin"/>
+    
+    <!-- Head -->
+    <rect x="18" y="7" width="28" height="20" class="skin" rx="6"/>
+    
+    <!-- Hair -->
+    <rect x="18" y="5" width="28" height="8" class="hair" rx="4"/>
+    <path class="hair-dark" d="M20 7 L18 13 L22 9 Z"/>
+    <path class="hair-dark" d="M44 7 L46 13 L42 9 Z"/>
+    <rect x="16" y="11" width="3" height="8" class="hair" rx="1"/>
+    <rect x="45" y="11" width="3" height="8" class="hair" rx="1"/>
+    
+    <!-- Beard -->
+    <path class="hair" d="M22 21 L20 27 L22 25 L24 27 L26 25 L28 27 L30 25 L32 27 L34 25 L36 27 L38 25 L40 27 L42 25 L44 21 Z"/>
+    
+    <!-- Glasses -->
+    <rect x="22" y="13" width="8" height="6" class="glasses" rx="2"/>
+    <rect x="34" y="13" width="8" height="6" class="glasses" rx="2"/>
+    <rect x="30" y="15" width="4" height="2" class="glasses"/>
+    <rect x="22" y="14" width="8" height="2" fill="#3498DB" opacity="0.3"/>
+    <rect x="34" y="14" width="8" height="2" fill="#3498DB" opacity="0.3"/>
+    
+    <rect x="24" y="15" width="4" height="4" class="eye" rx="1"/>
+    <rect x="36" y="15" width="4" height="4" class="eye" rx="1"/>
+    <rect x="25" y="16" width="1" height="1" class="eye-shine"/>
+    <rect x="37" y="16" width="1" height="1" class="eye-shine"/>
+    
+    <rect x="22" y="10" width="7" height="2" class="hair-dark" rx="1"/>
+    <rect x="35" y="10" width="7" height="2" class="hair-dark" rx="1"/>
+    
+    <rect x="30" y="17" width="4" height="2" class="skin-dark" rx="1"/>
+    
+    <!-- Serious working expression -->
+    <rect x="29" y="23" width="6" height="2" class="mouth" rx="1"/>
+  
+</g></svg>

@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" width="64" height="128" image-rendering="pixelated">
+  <defs>
+    <style>
+      .skin { fill: #FFDAB9; }
+      .skin-dark { fill: #DEB887; }
+      .hair { fill: #FF69B4; }
+      .hair-dark { fill: #DB7093; }
+      .hair-light { fill: #FFB6C1; }
+      .shirt { fill: #9B59B6; }
+      .shirt-dark { fill: #8E44AD; }
+      .shirt-light { fill: #A569BD; }
+      .accent { fill: #E91E63; }
+      .eye { fill: #2D3436; }
+      .eye-shine { fill: #FFFFFF; }
+      .mouth { fill: #E17055; }
+    </style>
+  </defs>
+  
+  <!-- IDLE -->
+  
+    <ellipse cx="32" cy="60" rx="12" ry="4" fill="#000000" opacity="0.2"/>
+    
+    <!-- Legs -->
+    <rect x="22" y="50" width="6" height="10" fill="#34495E" rx="2"/>
+    <rect x="36" y="50" width="6" height="10" fill="#34495E" rx="2"/>
+    <rect x="23" y="51" width="4" height="8" fill="#5D6D7E" rx="1"/>
+    <rect x="37" y="51" width="4" height="8" fill="#5D6D7E" rx="1"/>
+    
+    <!-- Shoes -->
+    <rect x="20" y="56" width="10" height="4" fill="#2C3E50" rx="2"/>
+    <rect x="34" y="56" width="10" height="4" fill="#2C3E50" rx="2"/>
+    
+    <!-- Body -->
+    <rect x="20" y="30" width="24" height="22" class="shirt" rx="4"/>
+    <rect x="22" y="32" width="20" height="18" class="shirt-light" rx="3"/>
+    
+    <!-- Design elements on shirt -->
+    <rect x="28" y="36" width="8" height="8" class="accent" rx="2"/>
+    <rect x="29" y="37" width="6" height="2" fill="#FFFFFF" opacity="0.5"/>
+    
+    <!-- Neck -->
+    <rect x="28" y="26" width="8" height="5" class="skin"/>
+    
+    <!-- Arms -->
+    <rect x="12" y="32" width="6" height="16" class="skin" rx="3"/>
+    <rect x="46" y="32" width="6" height="16" class="skin" rx="3"/>
+    
+    <!-- Hands -->
+    <circle cx="15" cy="50" r="4" class="skin"/>
+    <circle cx="49" cy="50" r="4" class="skin"/>
+    
+    <!-- Head -->
+    <rect x="18" y="8" width="28" height="22" class="skin" rx="8"/>
+    
+    <!-- Hair (stylish, pink) -->
+    <path class="hair" d="M18 14 L16 8 L20 4 L28 2 L36 4 L40 8 L46 14 L44 18 L42 12 L36 8 L28 6 L20 8 L18 14 Z"/>
+    <path class="hair-dark" d="M20 16 L18 20 L22 18 Z"/>
+    <path class="hair-dark" d="M44 16 L46 20 L42 18 Z"/>
+    <!-- Hair highlight -->
+    <path class="hair-light" d="M24 6 L26 4 L28 6" stroke="#FFB6C1" stroke-width="1" fill="none"/>
+    
+    <!-- Ears -->
+    <rect x="14" y="16" width="4" height="6" class="skin" rx="2"/>
+    <rect x="46" y="16" width="4" height="6" class="skin" rx="2"/>
+    
+    <!-- Eyes -->
+    <rect x="24" y="16" width="6" height="6" class="eye" rx="2"/>
+    <rect x="34" y="16" width="6" height="6" class="eye" rx="2"/>
+    <rect x="25" y="17" width="2" height="2" class="eye-shine"/>
+    <rect x="35" y="17" width="2" height="2" class="eye-shine"/>
+    
+    <!-- Eyebrows -->
+    <rect x="23" y="13" width="7" height="2" class="hair-dark" rx="1"/>
+    <rect x="34" y="13" width="7" height="2" class="hair-dark" rx="1"/>
+    
+    <!-- Mouth (smile) -->
+    <path stroke="#E17055" stroke-width="2" fill="none" d="M28 26 Q32 29 36 26"/>
+    
+    <!-- Pencil behind ear -->
+    <rect x="42" y="10" width="3" height="10" fill="#F1C40F" transform="rotate(15 43 15)"/>
+    <rect x="42" y="8" width="3" height="3" fill="#E67E22" transform="rotate(15 43 15)"/>
+  
+  
+  <!-- WORKING -->
+  <g id="working" transform="translate(0, 64)">
+    <ellipse cx="32" cy="60" rx="12" ry="4" fill="#000000" opacity="0.2"/>
+    
+    <!-- Legs bouncing -->
+    <rect x="22" y="49" width="6" height="10" fill="#34495E" rx="2"/>
+    <rect x="36" y="49" width="6" height="10" fill="#34495E" rx="2"/>
+    <rect x="23" y="50" width="4" height="8" fill="#5D6D7E" rx="1"/>
+    <rect x="37" y="50" width="4" height="8" fill="#5D6D7E" rx="1"/>
+    
+    <rect x="20" y="55" width="10" height="4" fill="#2C3E50" rx="2"/>
+    <rect x="34" y="55" width="10" height="4" fill="#2C3E50" rx="2"/>
+    
+    <!-- Body -->
+    <rect x="20" y="29" width="24" height="22" class="shirt" rx="4"/>
+    <rect x="22" y="31" width="20" height="18" class="shirt-light" rx="3"/>
+    <rect x="28" y="35" width="8" height="8" class="accent" rx="2"/>
+    <rect x="29" y="36" width="6" height="2" fill="#FFFFFF" opacity="0.5"/>
+    
+    <!-- Arms typing -->
+    <rect x="10" y="30" width="6" height="14" class="skin" rx="3"/>
+    <rect x="48" y="30" width="6" height="14" class="skin" rx="3"/>
+    <rect x="8" y="42" width="6" height="6" class="skin" rx="2"/>
+    <rect x="50" y="42" width="6" height="6" class="skin" rx="2"/>
+    
+    <!-- Pencil in hand -->
+    <rect x="6" y="38" width="3" height="12" fill="#F1C40F"/>
+    <rect x="6" y="36" width="3" height="3" fill="#E67E22"/>
+    
+    <!-- Neck -->
+    <rect x="28" y="25" width="8" height="5" class="skin"/>
+    
+    <!-- Head -->
+    <rect x="18" y="7" width="28" height="22" class="skin" rx="8"/>
+    
+    <!-- Hair (bouncing) -->
+    <path class="hair" d="M18 13 L16 7 L20 3 L28 1 L36 3 L40 7 L46 13 L44 17 L42 11 L36 7 L28 5 L20 7 L18 13 Z"/>
+    <path class="hair-dark" d="M20 15 L18 19 L22 17 Z"/>
+    <path class="hair-dark" d="M44 15 L46 19 L42 17 Z"/>
+    
+    <rect x="14" y="15" width="4" height="6" class="skin" rx="2"/>
+    <rect x="46" y="15" width="4" height="6" class="skin" rx="2"/>
+    
+    <!-- Eyes focused -->
+    <rect x="24" y="15" width="6" height="6" class="eye" rx="2"/>
+    <rect x="34" y="15" width="6" height="6" class="eye" rx="2"/>
+    <rect x="25" y="16" width="2" height="2" class="eye-shine"/>
+    <rect x="35" y="16" width="2" height="2" class="eye-shine"/>
+    
+    <rect x="23" y="12" width="7" height="2" class="hair-dark" rx="1"/>
+    <rect x="34" y="12" width="7" height="2" class="hair-dark" rx="1"/>
+    
+    <!-- Mouth -->
+    <rect x="29" y="25" width="6" height="2" class="mouth" rx="1"/>
+  
+</g></svg>

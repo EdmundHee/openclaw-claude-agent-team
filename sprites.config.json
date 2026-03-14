@@ -1,13 +1,18 @@
 {
   "description": "Character sprite configuration. Set 'type' to 'procedural' for built-in characters or 'spritesheet' to use custom artwork.",
   "openclaw": {
-    "type": "procedural",
-    "spriteSheet": null,
+    "type": "spritesheet",
+    "spriteSheet": "/sprites/openclaw.svg",
     "palette": { "body": "#FF6B35", "accent": "#FFB347", "eye": "#2D3436", "crown": "#FFD700" }
   },
   "agents": {
-    "type": "procedural",
-    "spriteSheets": [],
+    "type": "spritesheet",
+    "spriteSheets": [
+      "/sprites/agent-designer.svg",
+      "/sprites/agent-frontend.svg",
+      "/sprites/agent-backend.svg",
+      "/sprites/agent-qa.svg"
+    ],
     "palettes": [
       { "body": "#6C5CE7", "accent": "#A29BFE", "eye": "#2D3436" },
       { "body": "#00B894", "accent": "#55EFC4", "eye": "#2D3436" },

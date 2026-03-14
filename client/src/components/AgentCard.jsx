@@ -13,10 +13,24 @@ const STATUS_LABELS = {
   waiting: 'WAITING',
 };
 
-export default function AgentCard({ agent, paletteIndex = 0, isOpenClaw = false }) {
+function formatTokens(num) {
+  if (!num) return '0';
+  if (num < 1000) return num.toString();
+  if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+  return (num / 1000000).toFixed(1) + 'M';
+}
+
+export default function AgentCard({ agent, paletteIndex = 0, isOpenClaw = false, spriteSheet = null }) {
   const status = agent?.status || 'idle';
   const colors = STATUS_COLORS[status] || STATUS_COLORS.idle;
-  const spriteSize = isOpenClaw ? 128 : 80;
+  const spriteSize = isOpenClaw ? 128 : 180;
+  
+  // Extract task history and tokens
+  const tokens = agent?.tokens || { input: 0, output: 0 };
+  const taskHistory = agent?.taskHistory || [];
+  const currentTask = agent?.currentTask || null;
+  const passedFrom = agent?.passedFrom || null;
+  const isSubagent = agent?.isSubagent || false;
 
   return (
     <div style={{
@@ -48,11 +62,67 @@ export default function AgentCard({ agent, paletteIndex = 0, isOpenClaw = false 
           paletteIndex={paletteIndex}
           isOpenClaw={isOpenClaw}
           size={spriteSize}
+          spriteSheet={spriteSheet}
         />
       </div>
 
-      {/* Tool activity */}
-      {agent?.tool && (
+      {/* Current Task - Enhanced display */}
+      {currentTask && (
+        <div style={styles.currentTaskBadge}>
+          <span style={styles.currentTaskIcon}>&#128736;</span>
+          <span style={styles.currentTaskText}>
+            {currentTask.status || currentTask.toolName}
+          </span>
+          {currentTask.filePath && (
+            <span style={styles.filePath} title={currentTask.filePath}>
+              {currentTask.filePath.split('/').pop()}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Token Stats */}
+      {(tokens.input > 0 || tokens.output > 0) && (
+        <div style={styles.tokenBadge}>
+          <span style={styles.tokenLabel}>IN</span>
+          <span style={styles.tokenValue}>{formatTokens(tokens.input)}</span>
+          <span style={styles.tokenLabel}>OUT</span>
+          <span style={styles.tokenValue}>{formatTokens(tokens.output)}</span>
+        </div>
+      )}
+
+      {/* Task History - Show last 3 tasks */}
+      {taskHistory.length > 0 && (
+        <div style={styles.historyContainer}>
+          <div style={styles.historyLabel}>RECENT TASKS</div>
+          {taskHistory.slice(-3).reverse().map((task, idx) => (
+            <div key={idx} style={styles.historyItem}>
+              <span style={styles.historyIcon}>
+                {task.toolName === 'Delegated' ? '&#10140;' : '&#10003;'}
+              </span>
+              <span style={styles.historyText}>
+                {task.status || task.toolName}
+              </span>
+              {task.filePath && (
+                <span style={styles.historyFile}>
+                  {task.filePath.split('/').pop()}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Task Distribution - Passed from */}
+      {passedFrom && (
+        <div style={styles.passedFromBadge}>
+          <span style={styles.passedFromIcon}>&#8592;</span>
+          <span style={styles.passedFromText}>From: {passedFrom}</span>
+        </div>
+      )}
+
+      {/* Tool activity (legacy support) */}
+      {agent?.tool && !currentTask && (
         <div style={styles.toolBadge}>
           <span style={styles.toolIcon}>&#9881;</span>
           <span style={styles.toolText}>
@@ -83,7 +153,7 @@ export default function AgentCard({ agent, paletteIndex = 0, isOpenClaw = false 
         {isOpenClaw && agent?.openclawConnected === false && (
           <span style={styles.disconnectedBadge}>GATEWAY OFFLINE</span>
         )}
-        {agent?.isSubagent && (
+        {isSubagent && (
           <span style={styles.subagentBadge}>SUB-AGENT</span>
         )}
       </div>
@@ -129,6 +199,118 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
+  },
+  currentTaskBadge: {
+    background: 'rgba(9, 132, 227, 0.15)',
+    border: '1px solid rgba(9, 132, 227, 0.3)',
+    borderRadius: '6px',
+    padding: '4px 8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    maxWidth: '100%',
+  },
+  currentTaskIcon: {
+    fontSize: '10px',
+    color: '#0984e3',
+  },
+  currentTaskText: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '9px',
+    color: '#74b9ff',
+    fontWeight: '600',
+  },
+  filePath: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '8px',
+    color: '#636e72',
+    fontStyle: 'italic',
+    maxWidth: '80px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  tokenBadge: {
+    background: 'rgba(253, 203, 110, 0.1)',
+    border: '1px solid rgba(253, 203, 110, 0.3)',
+    borderRadius: '4px',
+    padding: '3px 6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '8px',
+  },
+  tokenLabel: {
+    fontFamily: '"Press Start 2P", monospace',
+    fontSize: '6px',
+    color: '#636e72',
+  },
+  tokenValue: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '9px',
+    color: '#fdcb6e',
+    fontWeight: '700',
+  },
+  historyContainer: {
+    background: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: '6px',
+    padding: '4px 6px',
+    width: '100%',
+    maxHeight: '60px',
+    overflow: 'hidden',
+  },
+  historyLabel: {
+    fontFamily: '"Press Start 2P", monospace',
+    fontSize: '5px',
+    color: '#636e72',
+    marginBottom: '2px',
+    letterSpacing: '1px',
+  },
+  historyItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '2px 0',
+    fontSize: '8px',
+  },
+  historyIcon: {
+    color: '#00b894',
+    fontSize: '8px',
+  },
+  historyText: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '8px',
+    color: '#b2bec3',
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  historyFile: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '7px',
+    color: '#636e72',
+    fontStyle: 'italic',
+  },
+  passedFromBadge: {
+    background: 'rgba(162, 155, 254, 0.15)',
+    border: '1px solid rgba(162, 155, 254, 0.3)',
+    borderRadius: '4px',
+    padding: '2px 6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  passedFromIcon: {
+    color: '#a29bfe',
+    fontSize: '10px',
+  },
+  passedFromText: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '8px',
+    color: '#a29bfe',
   },
   toolBadge: {
     background: 'rgba(0, 184, 148, 0.15)',

@@ -3,18 +3,14 @@ import { useRef, useEffect, useState } from 'react';
 /**
  * Character Sprite Component
  *
- * Renders a pixel-art character on a canvas with two states:
+ * Renders a pixel-art character with two states:
  *   - IDLE: gentle breathing/bobbing animation
  *   - WORKING: typing animation with active motion
  *
- * Sprite system is designed to be swappable:
- *   - Place sprite sheets in /public/sprites/
- *   - Each character needs: idle frames + working frames
- *   - Or use the built-in procedural characters (default)
- *
- * Sprite sheet format (if using image):
- *   Row 0: idle frames (2+ frames, 32x32 each)
- *   Row 1: working frames (2+ frames, 32x32 each)
+ * Sprite system supports:
+ *   - SVG sprites: Uses separate idle/working files
+ *   - PNG sprite sheets: Traditional row-based frames
+ *   - Procedural: Built-in pixel art characters (fallback)
  */
 
 // --- Built-in procedural character palettes ---
@@ -48,7 +44,6 @@ function drawProceduralCharacter(ctx, palette, frame, state, isOpenClaw, size) {
   ctx.scale(scale, scale);
   ctx.imageSmoothingEnabled = false;
 
-  // Clear
   ctx.clearRect(0, 0, FRAME_SIZE, FRAME_SIZE);
 
   const bobY = state === 'idle'
@@ -82,15 +77,11 @@ function drawProceduralCharacter(ctx, palette, frame, state, isOpenClaw, size) {
   ctx.fillStyle = palette.eye;
   const blinkFrame = frame % 20 === 0;
   if (blinkFrame) {
-    // Blink
     ctx.fillRect(12, baseY + 4, 3, 1);
     ctx.fillRect(17, baseY + 4, 3, 1);
   } else {
-    // Open eyes
     ctx.fillRect(12, baseY + 3, 3, 2);
     ctx.fillRect(17, baseY + 3, 3, 2);
-
-    // Eye shine
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(13, baseY + 3, 1, 1);
     ctx.fillRect(18, baseY + 3, 1, 1);
@@ -110,12 +101,10 @@ function drawProceduralCharacter(ctx, palette, frame, state, isOpenClaw, size) {
   // Arms
   ctx.fillStyle = palette.body;
   if (state === 'working') {
-    // Typing arms
     const armUp = frame % 2 === 0;
     ctx.fillRect(5, baseY + 10 + (armUp ? -1 : 1), 3, 5);
     ctx.fillRect(24, baseY + 10 + (armUp ? 1 : -1), 3, 5);
   } else {
-    // Resting arms
     ctx.fillRect(5, baseY + 10, 3, 6);
     ctx.fillRect(24, baseY + 10, 3, 6);
   }
@@ -128,13 +117,10 @@ function drawProceduralCharacter(ctx, palette, frame, state, isOpenClaw, size) {
   // OpenClaw crown
   if (isOpenClaw) {
     ctx.fillStyle = palette.crown || '#FFD700';
-    // Crown base
     ctx.fillRect(10, baseY - 4, 12, 3);
-    // Crown points
     ctx.fillRect(10, baseY - 7, 2, 3);
     ctx.fillRect(15, baseY - 7, 2, 3);
     ctx.fillRect(20, baseY - 7, 2, 3);
-    // Crown jewel
     ctx.fillStyle = '#FF0000';
     ctx.fillRect(15, baseY - 5, 2, 1);
   }
@@ -163,19 +149,40 @@ export default function CharacterSprite({ status = 'idle', paletteIndex = 0, isO
   const lastFrameTime = useRef(0);
   const [spriteImage, setSpriteImage] = useState(null);
 
-  // Load sprite sheet if provided
-  useEffect(() => {
-    if (spriteSheet) {
-      const img = new Image();
-      img.onload = () => setSpriteImage(img);
-      img.src = spriteSheet;
-    }
-  }, [spriteSheet]);
+  const isSvg = spriteSheet?.endsWith('.svg');
+
+  // SVG rendering - use separate idle/working files
+  if (isSvg && spriteSheet) {
+    const svgUrl = spriteSheet.replace('.svg', `-${status}.svg`);
+    return (
+      <img
+        src={svgUrl}
+        alt={isOpenClaw ? 'OpenClaw' : 'Agent'}
+        width={size}
+        height={size}
+        style={{
+          width: size,
+          height: size,
+          imageRendering: 'pixelated',
+        }}
+      />
+    );
+  }
 
   const palette = isOpenClaw
     ? OPENCLAW_PALETTE
     : PALETTES[paletteIndex % PALETTES.length];
 
+  // Load PNG sprite
+  useEffect(() => {
+    if (spriteSheet && !isSvg) {
+      const img = new Image();
+      img.onload = () => setSpriteImage(img);
+      img.src = spriteSheet;
+    }
+  }, [spriteSheet, isSvg]);
+
+  // Animation loop for procedural/PNG sprites
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -187,7 +194,6 @@ export default function CharacterSprite({ status = 'idle', paletteIndex = 0, isO
         lastFrameTime.current = time;
 
         if (spriteImage) {
-          // Draw from sprite sheet
           ctx.clearRect(0, 0, size, size);
           ctx.imageSmoothingEnabled = false;
           const row = status === 'idle' ? 0 : 1;
@@ -199,7 +205,6 @@ export default function CharacterSprite({ status = 'idle', paletteIndex = 0, isO
             0, 0, size, size
           );
         } else {
-          // Draw procedural character
           drawProceduralCharacter(ctx, palette, frameRef.current, status, isOpenClaw, size);
         }
       }

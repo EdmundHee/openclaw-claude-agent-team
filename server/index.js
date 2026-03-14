@@ -1,3 +1,5 @@
+// Testing agent detection
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -24,7 +26,7 @@ const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
 // --- State ---
-const agents = new Map(); // agentId -> { id, name, status, tool, project, projectPath, ... }
+const agents = new Map(); // agentId -> { id, name, status, tool, toolStatus, project, projectPath, tokens, taskHistory, currentTask, ... }
 const watchers = new Map(); // sessionFile -> AgentWatcher
 const scanner = new SessionScanner(CLAUDE_DIR);
 
@@ -33,6 +35,8 @@ let openclawStatus = {
   connected: false,
   status: 'disconnected', // disconnected | idle | working
   message: null,
+  tokens: { input: 0, output: 0 }, // NEW: Token tracking
+  taskHistory: [] // NEW: Task history
 };
 
 // --- Broadcast to all dashboard clients ---
@@ -59,7 +63,7 @@ function connectOpenClaw() {
 
     openclawWs.on('open', () => {
       console.log('🦞 Connected to OpenClaw gateway');
-      openclawStatus = { connected: true, status: 'idle', message: 'Gateway connected' };
+      openclawStatus = { connected: true, status: 'idle', message: null, tokens: { input: 0, output: 0 }, taskHistory: [] };
       broadcastOpenclawStatus();
     });
 
@@ -73,7 +77,7 @@ function connectOpenClaw() {
     });
 
     openclawWs.on('close', () => {
-      openclawStatus = { connected: false, status: 'disconnected', message: null };
+      openclawStatus = { connected: false, status: 'disconnected', message: null, tokens: { input: 0, output: 0 }, taskHistory: [] };
       broadcastOpenclawStatus();
       // Reconnect after 5 seconds
       openclawReconnectTimer = setTimeout(connectOpenClaw, 5000);
@@ -84,7 +88,7 @@ function connectOpenClaw() {
       openclawWs = null;
     });
   } catch (e) {
-    openclawStatus = { connected: false, status: 'disconnected', message: null };
+    openclawStatus = { connected: false, status: 'disconnected', message: null, tokens: { input: 0, output: 0 }, taskHistory: [] };
     broadcastOpenclawStatus();
     openclawReconnectTimer = setTimeout(connectOpenClaw, 5000);
   }
@@ -92,10 +96,10 @@ function connectOpenClaw() {
 
 function handleOpenClawMessage(msg) {
   // Handle OpenClaw gateway events
-  // Adapt based on OpenClaw's actual message protocol
   if (msg.type === 'agent:status' || msg.type === 'status') {
     openclawStatus.status = msg.status || 'idle';
     openclawStatus.message = msg.message || null;
+    if (msg.tokens) openclawStatus.tokens = msg.tokens;
     broadcastOpenclawStatus();
   }
 
@@ -114,6 +118,11 @@ function handleOpenClawMessage(msg) {
 
 // --- Agent lifecycle ---
 function addAgent(agentInfo) {
+  // Initialize new fields
+  agentInfo.tokens = agentInfo.tokens || { input: 0, output: 0 };
+  agentInfo.taskHistory = agentInfo.taskHistory || [];
+  agentInfo.currentTask = agentInfo.currentTask || null;
+  
   agents.set(agentInfo.id, agentInfo);
   broadcast({ type: 'agent:added', agent: agentInfo });
 
@@ -126,17 +135,40 @@ function addAgent(agentInfo) {
         agent.status = 'working';
         agent.tool = event.toolName;
         agent.toolStatus = event.status;
+        agent.currentTask = event.task || null;
       } else if (event.type === 'tool_done') {
         if (watcher.activeToolCount === 0) {
           agent.status = 'idle';
           agent.tool = null;
           agent.toolStatus = null;
+          agent.currentTask = null;
         }
       } else if (event.type === 'status_change') {
         agent.status = event.status;
         if (event.status === 'idle') {
           agent.tool = null;
           agent.toolStatus = null;
+          agent.currentTask = null;
+        }
+        // NEW: Update tokens and history
+        if (event.tokens) {
+          agent.tokens = event.tokens;
+        }
+        if (event.taskHistory) {
+          agent.taskHistory = event.taskHistory;
+        }
+      } else if (event.type === 'task_completed') {
+        // NEW: Task completed - add to history
+        if (event.task) {
+          agent.taskHistory = agent.taskHistory || [];
+          agent.taskHistory.push(event.task);
+          // Keep last 50 tasks
+          if (agent.taskHistory.length > 50) {
+            agent.taskHistory = agent.taskHistory.slice(-50);
+          }
+        }
+        if (event.tokens) {
+          agent.tokens = event.tokens;
         }
       } else if (event.type === 'subagent_start') {
         const subId = `${agentInfo.id}-sub-${event.subagentId}`;
@@ -150,16 +182,40 @@ function addAgent(agentInfo) {
             project: agent.project,       // Inherit parent's project
             projectPath: agent.projectPath,
             parentId: agentInfo.id,
+            passedFrom: event.passedFrom,  // NEW: Track who passed the task
             sessionFile: null,
             isSubagent: true,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            tokens: { input: 0, output: 0 },
+            taskHistory: [],
+            currentTask: {
+              toolName: 'Task',
+              status: event.taskDescription,
+              prompt: event.prompt
+            }
           });
         }
       } else if (event.type === 'subagent_done') {
         const subId = `${agentInfo.id}-sub-${event.subagentId}`;
+        
+        // NEW: Transfer task history from subagent to parent
+        const subAgent = agents.get(subId);
+        if (subAgent && subAgent.taskHistory && subAgent.taskHistory.length > 0) {
+          agent.taskHistory = agent.taskHistory || [];
+          agent.taskHistory.push({
+            toolName: 'Delegated',
+            status: subAgent.name,
+            passedTo: subId,
+            passedFrom: event.passedFrom,
+            completedAt: Date.now(),
+            subtasks: subAgent.taskHistory
+          });
+        }
+        
         removeAgent(subId);
       }
 
+      // Always include new fields in broadcast
       agents.set(agentInfo.id, agent);
       broadcast({ type: 'agent:updated', agent: { ...agent } });
     });
@@ -210,12 +266,21 @@ app.get('/api/projects', (req, res) => {
         path: agent.projectPath,
         agentCount: 0,
         workingCount: 0,
+        totalTokens: { input: 0, output: 0 },
+        taskCount: 0
       });
     }
     if (agent.project) {
       const p = projects.get(agent.project);
       p.agentCount++;
       if (agent.status === 'working') p.workingCount++;
+      if (agent.tokens) {
+        p.totalTokens.input += agent.tokens.input || 0;
+        p.totalTokens.output += agent.tokens.output || 0;
+      }
+      if (agent.taskHistory) {
+        p.taskCount += agent.taskHistory.length;
+      }
     }
   }
   res.json(Array.from(projects.values()));
@@ -234,8 +299,12 @@ app.post('/api/agents/watch', (req, res) => {
     projectPath: projectPath || null,
     sessionFile,
     parentId: null,
+    passedFrom: null,
     isSubagent: false,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    tokens: { input: 0, output: 0 },
+    taskHistory: [],
+    currentTask: null
   });
   res.json({ id });
 });
@@ -243,6 +312,28 @@ app.post('/api/agents/watch', (req, res) => {
 app.delete('/api/agents/:id', (req, res) => {
   removeAgent(req.params.id);
   res.json({ ok: true });
+});
+
+// NEW: Get detailed agent info including tokens and history
+app.get('/api/agents/:id', (req, res) => {
+  const agent = agents.get(req.params.id);
+  if (!agent) {
+    res.json({ error: 'Agent not found' });
+    return;
+  }
+  
+  // Get additional stats from watcher if available
+  if (agent.sessionFile && watchers.has(agent.sessionFile)) {
+    const watcher = watchers.get(agent.sessionFile);
+    const stats = {
+      ...agent,
+      tokenStats: watcher.getTokenStats(),
+      taskHistoryFull: watcher.getTaskHistory()
+    };
+    res.json(stats);
+  } else {
+    res.json(agent);
+  }
 });
 
 // --- WebSocket ---
@@ -258,14 +349,34 @@ wss.on('connection', (ws) => {
 async function autoScan() {
   try {
     const sessions = await scanner.scan();
+    
+    // Role names based on index
+    const roleNames = ['UI Designer', 'Frontend Dev', 'Backend Dev', 'QA Tester', 'DevOps', 'Data Engineer', 'Security', 'API Dev'];
+    
+    // Track running index per project for agents added in this scan
+    const projectNewAgentIndex = {};
+    
     for (const session of sessions) {
       const alreadyWatched = Array.from(agents.values()).some(
         a => a.sessionFile === session.file
       );
       if (!alreadyWatched && session.active) {
+        // Get existing agent count for this project as starting index
+        const existingCount = Object.keys(agents).filter(id => agents.get(id)?.project === session.project).length;
+        
+        // Use existing count + position in this batch
+        if (!projectNewAgentIndex[session.project]) {
+          projectNewAgentIndex[session.project] = existingCount;
+        }
+        
+        const agentIndex = projectNewAgentIndex[session.project];
+        projectNewAgentIndex[session.project]++; // Increment for next agent
+        
+        const roleName = agentIndex < roleNames.length ? roleNames[agentIndex] : `Agent ${agentIndex + 1}`;
+        
         addAgent({
           id: `agent-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          name: session.sessionId.slice(0, 8),
+          name: roleName,
           status: 'idle',
           tool: null,
           toolStatus: null,
@@ -273,8 +384,12 @@ async function autoScan() {
           projectPath: session.projectPath,
           sessionFile: session.file,
           parentId: null,
+          passedFrom: null,
           isSubagent: false,
-          createdAt: Date.now()
+          createdAt: Date.now(),
+          tokens: { input: 0, output: 0 },
+          taskHistory: [],
+          currentTask: null
         });
       }
     }

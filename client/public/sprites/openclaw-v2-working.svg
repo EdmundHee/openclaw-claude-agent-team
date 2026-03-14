@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" image-rendering="pixelated">
+  <defs>
+    <style>
+      .body { fill: #FF6B35; }
+      .body-dark { fill: #CC4A1A; }
+      .body-light { fill: #FF8C5A; }
+      .accent { fill: #C0C0C0; }
+      .accent-dark { fill: #808080; }
+      .accent-light { fill: #E8E8E8; }
+      .circuit { fill: #00FFFF; }
+      .eye { fill: #2D3436; }
+      .eye-shine { fill: #FFFFFF; }
+      .claw { fill: #FF6B35; }
+      .claw-dark { fill: #B34700; }
+      .mouth { fill: #E17055; }
+      .hair { fill: #4A3728; }
+    </style>
+  </defs>
+  
+  <g id="working" transform="">
+    <!-- Shadow -->
+    <ellipse cx="32" cy="60" rx="12" ry="4" fill="#000000" opacity="0.2"/>
+    
+    <!-- Tail -->
+    <path class="body-dark" d="M24 48 L28 52 L32 50 L36 52 L40 48 L38 44 L26 44 Z"/>
+    <path class="body" d="M26 46 L28 50 L32 48 L36 50 L38 46 L36 44 L28 44 Z"/>
+    
+    <!-- Legs working (slightly bouncing) -->
+    <rect x="20" y="49" width="3" height="8" class="body-dark" rx="1"/>
+    <rect x="41" y="49" width="3" height="8" class="body-dark" rx="1"/>
+    <rect x="24" y="51" width="2" height="6" class="body" rx="1"/>
+    <rect x="38" y="51" width="2" height="6" class="body" rx="1"/>
+    
+    <!-- Body -->
+    <rect x="20" y="28" width="24" height="20" class="body" rx="4"/>
+    <rect x="22" y="30" width="20" height="16" class="body-light" rx="3"/>
+    
+    <!-- Robot chest (active glow) -->
+    <rect x="26" y="32" width="12" height="8" class="accent" rx="2"/>
+    <rect x="28" y="33" width="8" height="2" class="accent-dark"/>
+    <rect x="30" y="36" width="4" height="2" fill="#00FFFF">
+      <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Circuits (glowing) -->
+    <rect x="22" y="35" width="3" height="1" fill="#00FFFF">
+      <animate attributeName="opacity" values="1;0.3;1" dur="0.3s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="39" y="35" width="3" height="1" fill="#00FFFF">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="0.3s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Arms typing (raised) -->
+    <rect x="12" y="34" width="4" height="10" class="body" rx="2"/>
+    <rect x="48" y="34" width="4" height="10" class="body" rx="2"/>
+    <rect x="13" y="35" width="2" height="8" class="body-light"/>
+    <rect x="49" y="35" width="2" height="8" class="body-light"/>
+    
+    <!-- Claws typing -->
+    <ellipse cx="9" cy="44" rx="5" ry="4" class="claw">
+      <animate attributeName="cy" values="44;42;44" dur="0.2s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="55" cy="44" rx="5" ry="4" class="claw">
+      <animate attributeName="cy" values="44;46;44" dur="0.2s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="9" cy="43" rx="3" ry="2" class="claw-dark"/>
+    <ellipse cx="55" cy="43" rx="3" ry="2" class="claw-dark"/>
+    
+    <!-- Neck -->
+    <rect x="28" y="24" width="8" height="5" class="body"/>
+    
+    <!-- Head (slight bounce) -->
+    <rect x="20" y="9" width="24" height="18" class="body" rx="6"/>
+    <rect x="22" y="11" width="20" height="14" class="body-light" rx="5"/>
+    
+    <!-- Hair -->
+    <path class="hair" d="M22 11 L22 7 L26 5 L32 4 L38 5 L42 7 L42 11 L40 9 L38 10 L32 9 L26 10 L24 9 Z"/>
+    
+    <!-- Antenna (bouncing) -->
+    <path stroke="#FF6B35" stroke-width="1" fill="none" d="M26 7 Q24 3 22 1"/>
+    <path stroke="#FF6B35" stroke-width="1" fill="none" d="M38 7 Q40 3 42 1"/>
+    <circle cx="22" cy="1" r="1" class="claw-dark"/>
+    <circle cx="42" cy="1" r="1" class="claw-dark"/>
+    
+    <!-- Eyes (focused) -->
+    <rect x="26" y="15" width="5" height="5" class="eye" rx="2"/>
+    <rect x="33" y="15" width="5" height="5" class="eye" rx="2"/>
+    <rect x="27" y="16" width="2" height="2" class="eye-shine"/>
+    <rect x="34" y="16" width="2" height="2" class="eye-shine"/>
+    
+    <!-- Robot eye (active) -->
+    <rect x="27" y="21" width="4" height="2" class="accent"/>
+    <rect x="28" y="21" width="2" height="2" fill="#00FFFF">
+      <animate attributeName="opacity" values="1;0.3;1" dur="0.4s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Mouth (talking/typing) -->
+    <rect x="28" y="23" width="8" height="3" class="mouth" rx="1"/>
+    <rect x="30" y="23" width="4" height="1" fill="#FF6B6B"/>
+  
+</g></svg>

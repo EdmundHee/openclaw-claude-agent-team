@@ -21,6 +21,12 @@ const SUBAGENT_TOOLS = new Set(['Task', 'Agent']);
 // How long to wait before declaring "waiting for permission"
 const PERMISSION_TIMEOUT_MS = 5000;
 
+// Estimate tokens (rough approximation: 1 token ≈ 4 chars)
+function estimateTokens(text) {
+  if (!text) return 0;
+  return Math.ceil(text.length / 4);
+}
+
 export class AgentWatcher {
   constructor(filePath, agentId, onEvent) {
     this.filePath = filePath;
@@ -29,8 +35,17 @@ export class AgentWatcher {
 
     this.fileOffset = 0;
     this.lineBuffer = '';
-    this.activeTools = new Map(); // toolId -> { name, status }
+    this.activeTools = new Map(); // toolId -> { name, status, input }
     this.subagentTools = new Map(); // toolId -> subagentId
+
+    // NEW: Token tracking
+    this.tokens = { input: 0, output: 0 };
+    
+    // NEW: Task history
+    this.taskHistory = [];
+    
+    // NEW: Current task details
+    this.currentTask = null;
 
     this._fsWatcher = null;
     this._pollInterval = null;
@@ -40,6 +55,16 @@ export class AgentWatcher {
 
   get activeToolCount() {
     return this.activeTools.size;
+  }
+
+  // NEW: Get token stats
+  getTokenStats() {
+    return { ...this.tokens };
+  }
+
+  // NEW: Get task history
+  getTaskHistory() {
+    return [...this.taskHistory];
   }
 
   start() {
@@ -133,6 +158,19 @@ export class AgentWatcher {
   _processRecord(record) {
     const { type, message } = record;
 
+    // NEW: Track tokens from message content
+    if (message?.content) {
+      for (const block of message.content) {
+        if (block.type === 'text' && block.text) {
+          if (type === 'assistant') {
+            this.tokens.output += estimateTokens(block.text);
+          } else if (type === 'user' && block.assistant && block.assistant.length > 0) {
+            // Track input tokens from previous assistant messages
+          }
+        }
+      }
+    }
+
     if (type === 'assistant' && message?.content) {
       // Look for tool_use blocks
       for (const block of message.content) {
@@ -140,16 +178,39 @@ export class AgentWatcher {
           const toolName = block.name;
           const toolId = block.id;
 
-          this.activeTools.set(toolId, { name: toolName });
+          // NEW: Store current task
+          this.currentTask = {
+            toolName,
+            status: this._formatToolStatus(toolName, block.input),
+            filePath: block.input?.file_path || null,
+            pattern: block.input?.pattern || null,
+            command: block.input?.command || null,
+            prompt: block.input?.prompt?.slice(0, 100) || block.input?.description?.slice(0, 100) || null,
+            startedAt: Date.now()
+          };
+
+          // NEW: Track tool input tokens
+          const inputStr = JSON.stringify(block.input || {});
+          this.tokens.input += estimateTokens(inputStr);
+
+          this.activeTools.set(toolId, { 
+            name: toolName, 
+            status: this.currentTask.status,
+            input: block.input
+          });
 
           // Check if this is a sub-agent spawn
           if (SUBAGENT_TOOLS.has(toolName)) {
             const taskDesc = block.input?.description || block.input?.prompt?.slice(0, 60) || 'Sub-task';
             this.subagentTools.set(toolId, toolId);
+            
+            // NEW: Emit subagent_start with task info
             this.onEvent({
               type: 'subagent_start',
               subagentId: toolId,
-              taskDescription: taskDesc
+              taskDescription: taskDesc,
+              prompt: block.input?.prompt || block.input?.description || '',
+              passedFrom: this.agentId
             });
           }
 
@@ -158,7 +219,8 @@ export class AgentWatcher {
             type: 'tool_start',
             toolId,
             toolName,
-            status
+            status,
+            task: this.currentTask
           });
 
           this._resetPermissionTimer();
@@ -171,17 +233,53 @@ export class AgentWatcher {
       for (const block of message.content) {
         if (block.type === 'tool_result') {
           const toolId = block.tool_use_id;
+          const toolData = this.activeTools.get(toolId);
+
+          // NEW: Add to task history when tool completes
+          if (toolData) {
+            const completedTask = {
+              toolName: toolData.name,
+              status: toolData.status,
+              filePath: toolData.input?.file_path || null,
+              completedAt: Date.now(),
+              duration: this.currentTask ? Date.now() - this.currentTask.startedAt : 0,
+              result: block.content?.slice(0, 200) || null // First 200 chars of result
+            };
+            
+            // Only add if not already in recent history
+            const existingIndex = this.taskHistory.findIndex(
+              t => t.toolName === completedTask.toolName && 
+              t.filePath === completedTask.filePath &&
+              Date.now() - t.completedAt < 60000 // Within last minute
+            );
+            
+            if (existingIndex === -1) {
+              this.taskHistory.push(completedTask);
+              // Keep only last 50 tasks
+              if (this.taskHistory.length > 50) {
+                this.taskHistory = this.taskHistory.slice(-50);
+              }
+              
+              this.onEvent({
+                type: 'task_completed',
+                task: completedTask,
+                tokens: { ...this.tokens }
+              });
+            }
+          }
 
           // Check if sub-agent completed
           if (this.subagentTools.has(toolId)) {
             this.onEvent({
               type: 'subagent_done',
-              subagentId: toolId
+              subagentId: toolId,
+              passedFrom: this.agentId
             });
             this.subagentTools.delete(toolId);
           }
 
           this.activeTools.delete(toolId);
+          this.currentTask = null;
           this.onEvent({ type: 'tool_done', toolId });
         }
       }
@@ -191,7 +289,15 @@ export class AgentWatcher {
     if (type === 'system' && record.subtype === 'turn_duration') {
       this.activeTools.clear();
       this.subagentTools.clear();
-      this.onEvent({ type: 'status_change', status: 'idle' });
+      this.currentTask = null;
+      
+      // NEW: Emit idle with final token count
+      this.onEvent({ 
+        type: 'status_change', 
+        status: 'idle',
+        tokens: { ...this.tokens },
+        taskHistory: [...this.taskHistory]
+      });
       this._clearPermissionTimer();
     }
 
@@ -212,18 +318,18 @@ export class AgentWatcher {
       case 'Edit':
         return `Editing ${input.file_path ? path.basename(input.file_path) : 'file'}`;
       case 'Bash':
-        return `Running command`;
+        return `Running: ${input.command ? input.command.slice(0, 40) : 'command'}`;
       case 'Grep':
         return `Searching: ${input.pattern || ''}`.slice(0, 50);
       case 'Glob':
-        return `Finding files: ${input.pattern || ''}`.slice(0, 50);
+        return `Finding: ${input.pattern || ''}`.slice(0, 50);
       case 'Task':
       case 'Agent':
         return `Delegating: ${(input.description || input.prompt || '').slice(0, 50)}`;
       case 'WebSearch':
-        return `Searching web: ${(input.query || '').slice(0, 40)}`;
+        return `Web: ${(input.query || '').slice(0, 40)}`;
       case 'WebFetch':
-        return `Fetching: ${(input.url || '').slice(0, 40)}`;
+        return `Fetch: ${(input.url || '').slice(0, 40)}`;
       default:
         return toolName;
     }

@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" width="64" height="128" image-rendering="pixelated">
+  <defs>
+    <style>
+      .skin { fill: #FFE4C4; }
+      .skin-dark { fill: #DEB887; }
+      .hair { fill: #2C3E50; }
+      .hair-light { fill: #34495E; }
+      .shirt { fill: #3498DB; }
+      .shirt-dark { fill: #2980B9; }
+      .shirt-light { fill: #5DADE2; }
+      .hoodie { fill: #1ABC9C; }
+      .eye { fill: #2D3436; }
+      .eye-shine { fill: #FFFFFF; }
+      .mouth { fill: #E17055; }
+    </style>
+  </defs>
+  
+  <!-- IDLE -->
+  <g id="idle">
+    <ellipse cx="32" cy="60" rx="12" ry="4" fill="#000000" opacity="0.2"/>
+    
+    <!-- Legs -->
+    <rect x="22" y="50" width="6" height="10" fill="#2C3E50" rx="2"/>
+    <rect x="36" y="50" width="6" height="10" fill="#2C3E50" rx="2"/>
+    <rect x="23" y="51" width="4" height="8" fill="#34495E" rx="1"/>
+    <rect x="37" y="51" width="4" height="8" fill="#34495E" rx="1"/>
+    
+    <!-- Shoes -->
+    <rect x="20" y="56" width="10" height="4" fill="#17202A" rx="2"/>
+    <rect x="34" y="56" width="10" height="4" fill="#17202A" rx="2"/>
+    
+    <!-- Hoodie body -->
+    <rect x="18" y="28" width="28" height="26" class="hoodie" rx="6"/>
+    <path class="shirt-dark" d="M26 32 L26 54 L38 54 L38 32 Z"/>
+    
+    <!-- Hood -->
+    <path class="shirt" d="M18 28 Q18 20 32 18 Q46 20 46 28 L46 32 L18 32 Z"/>
+    <path class="shirt-light" d="M24 24 Q32 20 40 24"/>
+    
+    <!-- Face opening -->
+    <rect x="22" y="22" width="20" height="14" class="skin" rx="4"/>
+    
+    <!-- Neck -->
+    <rect x="28" y="34" width="8" height="4" class="skin-dark"/>
+    
+    <!-- Arms in hoodie -->
+    <rect x="12" y="30" width="8" height="18" class="hoodie" rx="4"/>
+    <rect x="44" y="30" width="8" height="18" class="hoodie" rx="4"/>
+    
+    <!-- Hands -->
+    <circle cx="16" cy="50" r="4" class="skin"/>
+    <circle cx="48" cy="50" r="4" class="skin"/>
+    
+    <!-- Head -->
+    <rect x="18" y="6" width="28" height="20" class="hair" rx="6"/>
+    
+    <!-- Hair front -->
+    <path class="hair-light" d="M22 10 L24 6 L28 8 L32 6 L36 8 L40 6 L42 10"/>
+    
+    <!-- Eyes -->
+    <rect x="24" y="16" width="5" height="5" class="eye" rx="2"/>
+    <rect x="35" y="16" width="5" height="5" class="eye" rx="2"/>
+    <rect x="25" y="17" width="2" height="2" class="eye-shine"/>
+    <rect x="36" y="17" width="2" height="2" class="eye-shine"/>
+    
+    <!-- Eyebrows -->
+    <rect x="23" y="13" width="6" height="2" fill="#1A252F" rx="1"/>
+    <rect x="35" y="13" width="6" height="2" fill="#1A252F" rx="1"/>
+    
+    <!-- Headphones -->
+    <rect x="14" y="8" width="4" height="12" fill="#95A5A6" rx="2"/>
+    <rect x="46" y="8" width="4" height="12" fill="#95A5A6" rx="2"/>
+    <rect x="13" y="10" width="6" height="3" fill="#7F8C8D" rx="1"/>
+    <rect x="45" y="10" width="6" height="3" fill="#7F8C8D" rx="1"/>
+    
+    <!-- Mouth -->
+    <rect x="29" y="26" width="6" height="2" class="mouth" rx="1"/>
+  </g>
+  
+  <!-- WORKING -->
+  <g id="working" transform="translate(0, 64)">
+    <ellipse cx="32" cy="60" rx="12" ry="4" fill="#000000" opacity="0.2"/>
+    
+    <!-- Legs -->
+    <rect x="22" y="49" width="6" height="10" fill="#2C3E50" rx="2"/>
+    <rect x="36" y="49" width="6" height="10" fill="#2C3E50" rx="2"/>
+    <rect x="23" y="50" width="4" height="8" fill="#34495E" rx="1"/>
+    <rect x="37" y="50" width="4" height="8" fill="#34495E" rx="1"/>
+    
+    <rect x="20" y="55" width="10" height="4" fill="#17202A" rx="2"/>
+    <rect x="34" y="55" width="10" height="4" fill="#17202A" rx="2"/>
+    
+    <!-- Hoodie -->
+    <rect x="18" y="27" width="28" height="26" class="hoodie" rx="6"/>
+    <path class="shirt-dark" d="M26 31 L26 53 L38 53 L38 31 Z"/>
+    <path class="shirt" d="M18 27 Q18 19 32 17 Q46 19 46 27 L46 31 L18 31 Z"/>
+    <path class="shirt-light" d="M24 23 Q32 19 40 23"/>
+    
+    <rect x="22" y="21" width="20" height="14" class="skin" rx="4"/>
+    <rect x="28" y="33" width="8" height="4" class="skin-dark"/>
+    
+    <!-- Arms typing -->
+    <rect x="10" y="28" width="8" height="16" class="hoodie" rx="4"/>
+    <rect x="46" y="28" width="8" height="16" class="hoodie" rx="4"/>
+    <rect x="8" y="42" width="6" height="6" class="skin" rx="2"/>
+    <rect x="50" y="42" width="6" height="6" class="skin" rx="2"/>
+    
+    <!-- Head -->
+    <rect x="18" y="5" width="28" height="20" class="hair" rx="6"/>
+    <path class="hair-light" d="M22 9 L24 5 L28 7 L32 5 L36 7 L40 5 L42 9"/>
+    
+    <!-- Eyes focused -->
+    <rect x="24" y="15" width="5" height="5" class="eye" rx="2"/>
+    <rect x="35" y="15" width="5" height="5" class="eye" rx="2"/>
+    <rect x="25" y="16" width="2" height="2" class="eye-shine"/>
+    <rect x="36" y="16" width="2" height="2" class="eye-shine"/>
+    
+    <rect x="23" y="12" width="6" height="2" fill="#1A252F" rx="1"/>
+    <rect x="35" y="12" width="6" height="2" fill="#1A252F" rx="1"/>
+    
+    <rect x="14" y="7" width="4" height="12" fill="#95A5A6" rx="2"/>
+    <rect x="46" y="7" width="4" height="12" fill="#95A5A6" rx="2"/>
+    <rect x="13" y="9" width="6" height="3" fill="#7F8C8D" rx="1"/>
+    <rect x="45" y="9" width="6" height="3" fill="#7F8C8D" rx="1"/>
+    
+    <!-- Excited expression -->
+    <rect x="28" y="25" width="8" height="3" fill="#FFFFFF" rx="1"/>
+    <rect x="29" y="26" width="6" height="1" class="mouth"/>
+  </g>
+</svg>

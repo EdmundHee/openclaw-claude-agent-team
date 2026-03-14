@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts: ['claude-monitor.crafnext.com', 'localhost'],
     proxy: {
       '/api': 'http://localhost:3000',
       '/ws': {

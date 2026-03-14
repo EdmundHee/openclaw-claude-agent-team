@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-const WS_URL = `ws://${window.location.hostname}:3000`;
+// Use same host and WebSocket path - Express handles both HTTP and WS
+const WS_URL = `/ws`;
 
 export function useAgentSocket() {
   const [agents, setAgents] = useState([]);
