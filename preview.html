@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Dashboard - Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f1a; font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .wrapper { padding: 24px; display: flex; flex-direction: column; gap: 24px; min-height: 100vh; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; }
+  .title { font-family: 'Press Start 2P', monospace; font-size: 16px; color: #FF6B35; letter-spacing: 2px; }
+  .stats { display: flex; gap: 16px; align-items: center; }
+  .stat-item { font-size: 13px; color: #b2bec3; display: flex; align-items: center; gap: 6px; }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(5, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .openclaw-cell { grid-row: 1 / 3; grid-column: 1 / 2; }
+  .agent-cell { min-height: 180px; }
+
+  .card {
+    background: #1a1a2e;
+    border: 2px solid #16213e;
+    border-radius: 12px;
+    padding: 16px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card.working { border-color: #00b894; box-shadow: 0 0 20px rgba(0,184,148,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+  .card.waiting { border-color: #fdcb6e; box-shadow: 0 0 20px rgba(253,203,110,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+  .card.idle { border-color: #16213e; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+
+  .status-row { display: flex; align-items: center; gap: 6px; align-self: flex-start; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s; }
+  .status-dot.working { background: #00b894; box-shadow: 0 0 8px #00b894; animation: pulse 1.5s ease-in-out infinite; }
+  .status-dot.idle { background: #636e72; }
+  .status-dot.waiting { background: #fdcb6e; box-shadow: 0 0 8px #fdcb6e; }
+  .status-label { font-family: 'Press Start 2P', monospace; font-size: 7px; letter-spacing: 1px; }
+  .status-label.working { color: #00b894; }
+  .status-label.idle { color: #636e72; }
+  .status-label.waiting { color: #fdcb6e; }
+
+  .sprite-container { display: flex; align-items: center; justify-content: center; flex: 1; }
+
+  .tool-badge {
+    background: rgba(0,184,148,0.15);
+    border: 1px solid rgba(0,184,148,0.3);
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .tool-icon { font-size: 10px; color: #00b894; }
+  .tool-text { font-size: 10px; color: #b2bec3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .name-container { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .name { font-family: 'Press Start 2P', monospace; color: #dfe6e9; letter-spacing: 1px; text-transform: uppercase; }
+  .name.sm { font-size: 9px; }
+  .name.lg { font-size: 11px; }
+  .role { font-size: 10px; color: #636e72; font-weight: 500; }
+
+  .empty-slot {
+    height: 100%;
+    border: 2px dashed #1a1a2e;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    opacity: 0.4;
+  }
+  .empty-label { font-family: 'Press Start 2P', monospace; font-size: 7px; color: #2d3436; letter-spacing: 1px; }
+
+  .status-bar {
+    position: fixed;
+    bottom: 12px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+  }
+  .connection-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(15,15,26,0.9); padding: 6px 12px; border-radius: 8px; border: 1px solid #1a1a2e;
+  }
+  .conn-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .conn-text { font-size: 11px; color: #636e72; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <h1 class="title">OPENCLAW DASHBOARD</h1>
+    <div class="stats">
+      <span class="stat-item"><span class="stat-dot" style="background:#00b894"></span>2 working</span>
+      <span class="stat-item"><span class="stat-dot" style="background:#fdcb6e"></span>1 waiting</span>
+      <span class="stat-item"><span class="stat-dot" style="background:#636e72"></span>2 idle</span>
+      <span class="stat-item">5 total</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- OpenClaw -->
+    <div class="openclaw-cell">
+      <div class="card working" id="openclaw-card">
+        <div class="status-row">
+          <div class="status-dot working"></div>
+          <span class="status-label working">WORKING</span>
+        </div>
+        <div class="sprite-container">
+          <canvas id="openclaw-sprite" width="128" height="128" style="width:128px;height:128px;image-rendering:pixelated;"></canvas>
+        </div>
+        <div class="tool-badge">
+          <span class="tool-icon">&#9881;</span>
+          <span class="tool-text">Managing 2 agents</span>
+        </div>
+        <div class="name-container">
+          <span class="name lg">OPENCLAW</span>
+          <span class="role">Product Manager</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 1 agents -->
+    <div class="agent-cell" id="agent-cell-0"></div>
+    <div class="agent-cell" id="agent-cell-1"></div>
+    <div class="agent-cell" id="agent-cell-2"></div>
+    <div class="agent-cell" id="agent-cell-3"></div>
+    <div class="agent-cell" id="agent-cell-4"></div>
+    <!-- Row 2 agents -->
+    <div class="agent-cell" id="agent-cell-5"></div>
+    <div class="agent-cell" id="agent-cell-6"></div>
+    <div class="agent-cell" id="agent-cell-7"></div>
+    <div class="agent-cell" id="agent-cell-8"></div>
+    <div class="agent-cell" id="agent-cell-9"></div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="connection-badge">
+    <div class="conn-dot" style="background:#00b894"></div>
+    <span class="conn-text">Demo Mode</span>
+  </div>
+</div>
+
+<script>
+// --- Demo agent data ---
+const demoAgents = [
+  { name: 'researcher', status: 'working', tool: 'WebSearch', toolStatus: 'Searching: React patterns' },
+  { name: 'coder', status: 'working', tool: 'Edit', toolStatus: 'Editing App.jsx' },
+  { name: 'reviewer', status: 'idle', tool: null },
+  { name: 'tester', status: 'waiting', tool: null },
+  { name: 'deployer', status: 'idle', tool: null },
+  null, null, null, null, null
+];
+
+// --- Palettes ---
+const PALETTES = [
+  { body: '#6C5CE7', accent: '#A29BFE', eye: '#2D3436' },
+  { body: '#00B894', accent: '#55EFC4', eye: '#2D3436' },
+  { body: '#E17055', accent: '#FAB1A0', eye: '#2D3436' },
+  { body: '#0984E3', accent: '#74B9FF', eye: '#2D3436' },
+  { body: '#FDCB6E', accent: '#FFEAA7', eye: '#2D3436' },
+  { body: '#E84393', accent: '#FD79A8', eye: '#2D3436' },
+  { body: '#00CEC9', accent: '#81ECEC', eye: '#2D3436' },
+  { body: '#FF7675', accent: '#FFB8B8', eye: '#2D3436' },
+  { body: '#A29BFE', accent: '#DFE6E9', eye: '#2D3436' },
+  { body: '#636E72', accent: '#B2BEC3', eye: '#DFE6E9' },
+];
+const OPENCLAW_PALETTE = { body: '#FF6B35', accent: '#FFB347', eye: '#2D3436', crown: '#FFD700' };
+
+// --- Drawing ---
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+function drawChar(ctx, palette, frame, state, isOpenClaw, size) {
+  const s = size / 32;
+  ctx.save(); ctx.scale(s,s); ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0,0,32,32);
+
+  const bobY = state === 'idle' ? Math.sin(frame * 0.8) * 1.5 : (frame % 2 === 0 ? -1 : 1);
+  const baseY = 6 + bobY;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.beginPath(); ctx.ellipse(16,28,8,3,0,0,Math.PI*2); ctx.fill();
+
+  // Body
+  ctx.fillStyle = palette.body;
+  roundRect(ctx,8,baseY+8,16,14,4); ctx.fill();
+
+  // Head
+  ctx.fillStyle = palette.body;
+  roundRect(ctx,9,baseY-1,14,12,5); ctx.fill();
+
+  // Face highlight
+  ctx.fillStyle = palette.accent;
+  roundRect(ctx,11,baseY+1,10,6,3); ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = palette.eye;
+  const blink = frame % 20 === 0;
+  if (blink) {
+    ctx.fillRect(12,baseY+4,3,1); ctx.fillRect(17,baseY+4,3,1);
+  } else {
+    ctx.fillRect(12,baseY+3,3,2); ctx.fillRect(17,baseY+3,3,2);
+    ctx.fillStyle = '#FFF'; ctx.fillRect(13,baseY+3,1,1); ctx.fillRect(18,baseY+3,1,1);
+  }
+
+  // Mouth
+  ctx.fillStyle = palette.eye;
+  if (state === 'working' && frame % 2 === 0) {
+    ctx.fillRect(14,baseY+7,4,2);
+    ctx.fillStyle = '#FF6B6B'; ctx.fillRect(15,baseY+7,2,1);
+  } else {
+    ctx.fillRect(14,baseY+7,4,1);
+  }
+
+  // Arms
+  ctx.fillStyle = palette.body;
+  if (state === 'working') {
+    const armUp = frame % 2 === 0;
+    ctx.fillRect(5,baseY+10+(armUp?-1:1),3,5);
+    ctx.fillRect(24,baseY+10+(armUp?1:-1),3,5);
+  } else {
+    ctx.fillRect(5,baseY+10,3,6); ctx.fillRect(24,baseY+10,3,6);
+  }
+
+  // Legs
+  ctx.fillStyle = palette.accent;
+  ctx.fillRect(11,baseY+20,4,4); ctx.fillRect(17,baseY+20,4,4);
+
+  // Crown for OpenClaw
+  if (isOpenClaw) {
+    ctx.fillStyle = palette.crown;
+    ctx.fillRect(10,baseY-4,12,3);
+    ctx.fillRect(10,baseY-7,2,3); ctx.fillRect(15,baseY-7,2,3); ctx.fillRect(20,baseY-7,2,3);
+    ctx.fillStyle = '#FF0000'; ctx.fillRect(15,baseY-5,2,1);
+  }
+
+  ctx.restore();
+}
+
+// --- Create agent cards ---
+demoAgents.forEach((agent, i) => {
+  const cell = document.getElementById(`agent-cell-${i}`);
+  if (!agent) {
+    cell.innerHTML = `<div class="empty-slot">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <rect x="8" y="8" width="16" height="16" rx="4" stroke="#2d3436" stroke-width="2" stroke-dasharray="4 3"/>
+        <line x1="16" y1="12" x2="16" y2="20" stroke="#2d3436" stroke-width="2"/>
+        <line x1="12" y1="16" x2="20" y2="16" stroke="#2d3436" stroke-width="2"/>
+      </svg>
+      <span class="empty-label">SLOT ${i+1}</span>
+    </div>`;
+    return;
+  }
+
+  const statusClass = agent.status;
+  cell.innerHTML = `
+    <div class="card ${statusClass}">
+      <div class="status-row">
+        <div class="status-dot ${statusClass}"></div>
+        <span class="status-label ${statusClass}">${agent.status.toUpperCase()}</span>
+      </div>
+      <div class="sprite-container">
+        <canvas id="sprite-${i}" width="80" height="80" style="width:80px;height:80px;image-rendering:pixelated;"></canvas>
+      </div>
+      ${agent.tool ? `<div class="tool-badge"><span class="tool-icon">&#9881;</span><span class="tool-text">${agent.toolStatus||agent.tool}</span></div>` : ''}
+      <div class="name-container">
+        <span class="name sm">${agent.name.toUpperCase()}</span>
+      </div>
+    </div>`;
+});
+
+// --- Animation loop ---
+let frame = 0;
+function animate() {
+  frame++;
+
+  // OpenClaw
+  const ocCanvas = document.getElementById('openclaw-sprite');
+  if (ocCanvas) drawChar(ocCanvas.getContext('2d'), OPENCLAW_PALETTE, frame, 'working', true, 128);
+
+  // Agents
+  demoAgents.forEach((agent, i) => {
+    if (!agent) return;
+    const canvas = document.getElementById(`sprite-${i}`);
+    if (canvas) drawChar(canvas.getContext('2d'), PALETTES[i], frame, agent.status === 'working' ? 'working' : 'idle', false, 80);
+  });
+
+  setTimeout(animate, 250);
+}
+animate();
+
+// --- Simulate activity changes ---
+setInterval(() => {
+  demoAgents.forEach((agent, i) => {
+    if (!agent) return;
+    const rand = Math.random();
+    if (rand < 0.08) {
+      agent.status = agent.status === 'working' ? 'idle' : 'working';
+      agent.tool = agent.status === 'working' ? 'Bash' : null;
+      agent.toolStatus = agent.status === 'working' ? 'Running tests' : null;
+      // Re-render card
+      const cell = document.getElementById(`agent-cell-${i}`);
+      cell.innerHTML = `
+        <div class="card ${agent.status}">
+          <div class="status-row">
+            <div class="status-dot ${agent.status}"></div>
+            <span class="status-label ${agent.status}">${agent.status.toUpperCase()}</span>
+          </div>
+          <div class="sprite-container">
+            <canvas id="sprite-${i}" width="80" height="80" style="width:80px;height:80px;image-rendering:pixelated;"></canvas>
+          </div>
+          ${agent.tool ? `<div class="tool-badge"><span class="tool-icon">&#9881;</span><span class="tool-text">${agent.toolStatus||agent.tool}</span></div>` : ''}
+          <div class="name-container">
+            <span class="name sm">${agent.name.toUpperCase()}</span>
+          </div>
+        </div>`;
+    }
+  });
+}, 4000);
+</script>
+</body>
+</html>

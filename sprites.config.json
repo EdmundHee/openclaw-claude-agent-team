@@ -1,0 +1,29 @@
+{
+  "description": "Character sprite configuration. Set 'type' to 'procedural' for built-in characters or 'spritesheet' to use custom artwork.",
+  "openclaw": {
+    "type": "procedural",
+    "spriteSheet": null,
+    "palette": { "body": "#FF6B35", "accent": "#FFB347", "eye": "#2D3436", "crown": "#FFD700" }
+  },
+  "agents": {
+    "type": "procedural",
+    "spriteSheets": [],
+    "palettes": [
+      { "body": "#6C5CE7", "accent": "#A29BFE", "eye": "#2D3436" },
+      { "body": "#00B894", "accent": "#55EFC4", "eye": "#2D3436" },
+      { "body": "#E17055", "accent": "#FAB1A0", "eye": "#2D3436" },
+      { "body": "#0984E3", "accent": "#74B9FF", "eye": "#2D3436" },
+      { "body": "#FDCB6E", "accent": "#FFEAA7", "eye": "#2D3436" },
+      { "body": "#E84393", "accent": "#FD79A8", "eye": "#2D3436" },
+      { "body": "#00CEC9", "accent": "#81ECEC", "eye": "#2D3436" },
+      { "body": "#FF7675", "accent": "#FFB8B8", "eye": "#2D3436" },
+      { "body": "#A29BFE", "accent": "#DFE6E9", "eye": "#2D3436" },
+      { "body": "#636E72", "accent": "#B2BEC3", "eye": "#DFE6E9" }
+    ]
+  },
+  "spriteFormat": {
+    "frameSize": 32,
+    "layout": "Row 0 = idle frames (32x32 each), Row 1 = working frames",
+    "minFrames": 2
+  }
+}
