@@ -32,8 +32,6 @@ const DEFAULT_AGENTS = [
   { id: 'slot-2', name: 'Frontend Dev', status: 'offline', paletteIndex: 1 },
   { id: 'slot-3', name: 'Backend Dev', status: 'offline', paletteIndex: 2 },
   { id: 'slot-4', name: 'QA Tester', status: 'offline', paletteIndex: 3 },
-  { id: 'slot-5', name: 'DevOps', status: 'offline', paletteIndex: 4 },
-  { id: 'slot-6', name: 'Data Engineer', status: 'offline', paletteIndex: 5 },
 ];
 
 // Sprite sheets for agents - matches sprite config order
