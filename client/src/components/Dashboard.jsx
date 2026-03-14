@@ -26,6 +26,16 @@ import AgentCard from './AgentCard.jsx';
 const COLS = 3;
 const MIN_ROWS = 2;
 
+// Default agent slots - always shown even when no sessions
+const DEFAULT_AGENTS = [
+  { id: 'slot-1', name: 'UI Designer', status: 'offline', paletteIndex: 0 },
+  { id: 'slot-2', name: 'Frontend Dev', status: 'offline', paletteIndex: 1 },
+  { id: 'slot-3', name: 'Backend Dev', status: 'offline', paletteIndex: 2 },
+  { id: 'slot-4', name: 'QA Tester', status: 'offline', paletteIndex: 3 },
+  { id: 'slot-5', name: 'DevOps', status: 'offline', paletteIndex: 4 },
+  { id: 'slot-6', name: 'Data Engineer', status: 'offline', paletteIndex: 5 },
+];
+
 // Sprite sheets for agents - matches sprite config order
 const AGENT_SPRITES = [
   '/sprites/agent-designer.svg',
@@ -54,10 +64,19 @@ export default function Dashboard({ agents, openclaw = {} }) {
   // Total slots = rows × columns
   const totalSlots = rowsNeeded * COLS;
 
-  // Build slots — fill with agents or empty
+  // Build slots — fill with agents or default slots
   const slots = [];
-  for (let i = 0; i < totalSlots; i++) {
-    slots.push(allAgents[i] || null);
+  
+  // If no real agents, show default slots
+  if (allAgents.length === 0) {
+    for (let i = 0; i < Math.max(MIN_ROWS * COLS, DEFAULT_AGENTS.length); i++) {
+      slots.push(DEFAULT_AGENTS[i] || null);
+    }
+  } else {
+    // Show real agents, fill rest with defaults
+    for (let i = 0; i < Math.max(MIN_ROWS * COLS, allAgents.length); i++) {
+      slots.push(allAgents[i] || DEFAULT_AGENTS[i] || null);
+    }
   }
 
   // Compute team summary

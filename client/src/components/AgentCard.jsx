@@ -4,6 +4,7 @@ const STATUS_COLORS = {
   idle: { bg: '#ffffff', border: '#cccccc', glow: 'transparent', dot: '#636e72' },
   working: { bg: '#ffffff', border: '#00b894', glow: 'rgba(0, 184, 148, 0.3)', dot: '#00b894' },
   waiting: { bg: '#ffffff', border: '#fdcb6e', glow: 'rgba(253, 203, 110, 0.3)', dot: '#fdcb6e' },
+  offline: { bg: '#f5f5f5', border: '#dddddd', glow: 'transparent', dot: '#999999' },
   disconnected: { bg: '#ffffff', border: '#cccccc', glow: 'transparent', dot: '#e17055' },
 };
 
@@ -11,6 +12,7 @@ const STATUS_LABELS = {
   idle: 'IDLE',
   working: 'WORKING',
   waiting: 'WAITING',
+  offline: 'OFFLINE',
 };
 
 function formatTokens(num) {
